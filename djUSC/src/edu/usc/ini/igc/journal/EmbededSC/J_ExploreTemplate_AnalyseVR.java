@@ -7,6 +7,7 @@ import java.util.List;
 import edu.uga.DICCCOL.DicccolUtilIO;
 import edu.uga.DICCCOL.stat.Correlation;
 
+//commit
 public class J_ExploreTemplate_AnalyseVR {
 
 	public int optDicIndex;
