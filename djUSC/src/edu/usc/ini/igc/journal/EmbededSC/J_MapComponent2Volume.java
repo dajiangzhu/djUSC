@@ -19,7 +19,7 @@ public class J_MapComponent2Volume {
     private float threshold = 5.5f;
 
 
-	private void mapComponent2Volume(String AMtrixFile, String maskFile,
+	private void mapComponent2Volume(String AMtrixFile, String maskFile, int startComIndex, int endComIndex,
 			String outputVolPre) throws NumberFormatException,
 			InvalidImageException, IOException {
 		System.out.println("Load the maskfile...");
@@ -83,7 +83,17 @@ public class J_MapComponent2Volume {
 	}
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+		if(args.length==5)
+		{
+			String AMatrix = args[0].trim();
+			String mask = args[1].trim();
+			int StartComIndex = Integer.valueOf(args[2].trim());
+			int EndComIndex = Integer.valueOf(args[3].trim());
+			String outPutPre = args[4].trim();	
+		}
+		else
+			System.out.println("Need para: AMatrix mask startComIndex endComIndex and outputpre");
+		
 
 	}
 
