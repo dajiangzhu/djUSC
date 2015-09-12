@@ -12,18 +12,16 @@ import edu.uga.liulab.djVtkBase.djNiftiData;
 import edu.uga.liulab.djVtkBase.djVtkSurData;
 
 public class J_MapComponent2Volume {
-	
-    private djNiftiData maskData = null;
-    private djVtkSurData surData = null;
-    private String AMtrixFile = "";
-    private float threshold = 5.5f;
 
+	private djNiftiData maskData = null;
+	private djNiftiData outputData = null;
 
-	private void mapComponent2Volume(String AMtrixFile, String maskFile, int startComIndex, int endComIndex,
-			String outputVolPre) throws NumberFormatException,
-			InvalidImageException, IOException {
+	private void mapComponent2Volume(String AMtrixFile, String maskFile,
+			int startComIndex, int endComIndex, String outputVolPre)
+			throws NumberFormatException, InvalidImageException, IOException {
 		System.out.println("Load the maskfile...");
 		maskData = new djNiftiData(maskFile);
+		outputData = new djNiftiData(maskFile);
 
 		int voxCount = 0;
 		for (int x = 0; x < maskData.xSize; x++)
@@ -32,7 +30,6 @@ public class J_MapComponent2Volume {
 					if (maskData.getValueBasedOnVolumeCoordinate(x, y, z, 0) > 0.5)
 						voxCount++;
 
-		float[][][] resultVol = new float[maskData.xSize][maskData.ySize][maskData.zSize];
 		System.out.println("There are total " + voxCount + " voxels!");
 		try {
 			FileInputStream fstream = new FileInputStream(AMtrixFile);
@@ -40,26 +37,39 @@ public class J_MapComponent2Volume {
 			BufferedReader br = new BufferedReader(new InputStreamReader(in));
 			String strLine;
 			String[] tmpLine = null;
-			int lineCount = 1;
+			int componentIndex = 0;
 			while ((strLine = br.readLine()) != null) {
-				// if(lineCount%10==0)
-				System.out.println("The " + (lineCount++) + " th line...");
-				tmpLine = strLine.split("\\s+");
-				if (tmpLine.length != voxCount)
-					System.out.println("ERROR with voxNum!!");
-				int count = 0;
-				for (int x = 0; x < maskData.xSize; x++)
-					for (int y = 0; y < maskData.ySize; y++)
-						for (int z = 0; z < maskData.zSize; z++)
-							if (maskData.getValueBasedOnVolumeCoordinate(x, y,
-									z, 0) > 0.5) {
-								float val = Float
-										.valueOf(tmpLine[count].trim());
-								if (val >= threshold)
-									resultVol[x][y][z] = 1.0f;
-								count++;
-							} // if
+				if (componentIndex >= startComIndex
+						&& componentIndex <= endComIndex) {
+					System.out.println("Mapping the " + componentIndex
+							+ " th component...");
+					float[][][] resultVol = new float[maskData.xSize][maskData.ySize][maskData.zSize];
+					tmpLine = strLine.split("\\s+");
+					if (tmpLine.length != voxCount)
+						System.out.println("ERROR with voxNum!!");
+					int count = 0;
+					for (int x = 0; x < maskData.xSize; x++)
+						for (int y = 0; y < maskData.ySize; y++)
+							for (int z = 0; z < maskData.zSize; z++)
+								if (maskData.getValueBasedOnVolumeCoordinate(x,
+										y, z, 0) > 0.5) {
+									float val = Math.abs(Float
+											.valueOf(tmpLine[count].trim()));
+									resultVol[x][y][z] = val;
+									count++;
+								} // if
 
+					for (int x = 0; x < maskData.xSize; x++)
+						for (int y = 0; y < maskData.ySize; y++)
+							for (int z = 0; z < maskData.zSize; z++) {
+								int[] seedVolCoordsReverse = { z, y, x };
+								this.maskData.rawNiftiData.putPix(
+										resultVol[x][y][z],
+										seedVolCoordsReverse);
+							}
+					this.maskData.rawNiftiData.write(outputVolPre + "Com_"+componentIndex);
+				} // if
+				componentIndex++;
 			}// while
 			br.close();
 			in.close();
@@ -68,32 +78,22 @@ public class J_MapComponent2Volume {
 			System.err.println("Error: " + e.getMessage());
 		}
 
-		for (int x = 0; x < maskData.xSize; x++)
-			for (int y = 0; y < maskData.ySize; y++)
-				for (int z = 0; z < maskData.zSize; z++) {
-					int[] seedVolCoordsReverse = { z, y, x };
-					if (resultVol[x][y][z] == 1.0f)
-						this.maskData.rawNiftiData.putPix(Float.valueOf("1.0"),
-								seedVolCoordsReverse);
-					else
-						this.maskData.rawNiftiData.putPix(Float.valueOf("0.0"),
-								seedVolCoordsReverse);
-				}
-		this.maskData.rawNiftiData.write(outputVolPre + "vol_" + threshold);
 	}
 
-	public static void main(String[] args) {
-		if(args.length==5)
-		{
+	public static void main(String[] args) throws NumberFormatException,
+			InvalidImageException, IOException {
+		if (args.length == 5) {
 			String AMatrix = args[0].trim();
 			String mask = args[1].trim();
 			int StartComIndex = Integer.valueOf(args[2].trim());
 			int EndComIndex = Integer.valueOf(args[3].trim());
-			String outPutPre = args[4].trim();	
-		}
-		else
-			System.out.println("Need para: AMatrix mask startComIndex endComIndex and outputpre");
-		
+			String outPutPre = args[4].trim();
+			J_MapComponent2Volume mainHandler = new J_MapComponent2Volume();
+			mainHandler.mapComponent2Volume(AMatrix, mask, StartComIndex,
+					EndComIndex, outPutPre);
+		} else
+			System.out
+					.println("Need para: AMatrix mask startComIndex endComIndex and outputpre");
 
 	}
 
