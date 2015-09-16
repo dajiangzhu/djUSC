@@ -5,9 +5,11 @@ import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.List;
 
 import com.xinapse.loadableimage.InvalidImageException;
 
+import edu.uga.DICCCOL.DicccolUtilIO;
 import edu.uga.liulab.djVtkBase.djNiftiData;
 import edu.uga.liulab.djVtkBase.djVtkSurData;
 
@@ -16,9 +18,19 @@ public class J_MapComponent2Volume {
 	private djNiftiData maskData = null;
 	private djNiftiData outputData = null;
 
-	private void mapComponent2Volume(String AMtrixFile, String maskFile,
-			int startComIndex, int endComIndex, String outputVolPre)
-			throws NumberFormatException, InvalidImageException, IOException {
+	private void mapComponent2Volume(int subID, String AMatrixFilePre,
+			String configInfoFile, String maskFile, int startComIndex,
+			int endComIndex, String outputVolPre) throws NumberFormatException,
+			InvalidImageException, IOException {
+		List<String> configInfo = DicccolUtilIO
+				.loadFileToArrayList(configInfoFile);
+		String[] lastLine = configInfo.get(configInfo.size() - 1).split("\\s+");
+		int lastOptComponentIndex = Integer.valueOf(lastLine[0].trim());
+//		int lastOptRoundNum = Integer.valueOf(lastLine[1].trim()) + 1;
+		System.out.println("--- lastOptComponentIndex:" + lastOptComponentIndex+ " ---");
+		String AMtrixFile = AMatrixFilePre + "/OptDicIndex_"
+				+ lastOptComponentIndex + "/sub_"+subID+"_OptDicIndex_"
+				+ lastOptComponentIndex + "_Round_final_A.txt";
 		System.out.println("Load the maskfile...");
 		maskData = new djNiftiData(maskFile);
 		outputData = new djNiftiData(maskFile);
@@ -37,10 +49,17 @@ public class J_MapComponent2Volume {
 			BufferedReader br = new BufferedReader(new InputStreamReader(in));
 			String strLine;
 			String[] tmpLine = null;
-			int componentIndex = 0;
-			while ((strLine = br.readLine()) != null) {
-				if (componentIndex >= startComIndex
-						&& componentIndex <= endComIndex) {
+			int componentIndex = -1;
+
+			for (int i = 0; i < startComIndex; i++)
+			{
+				strLine = br.readLine();
+				componentIndex++;
+			}
+			for (int i = startComIndex; i <= endComIndex; i++) {
+				strLine = br.readLine();
+				componentIndex++;
+				if (strLine != null) {
 					System.out.println("Mapping the " + componentIndex
 							+ " th component...");
 					float[][][] resultVol = new float[maskData.xSize][maskData.ySize][maskData.zSize];
@@ -63,14 +82,16 @@ public class J_MapComponent2Volume {
 						for (int y = 0; y < maskData.ySize; y++)
 							for (int z = 0; z < maskData.zSize; z++) {
 								int[] seedVolCoordsReverse = { z, y, x };
-								this.maskData.rawNiftiData.putPix(
+								this.outputData.rawNiftiData.putPix(
 										resultVol[x][y][z],
 										seedVolCoordsReverse);
 							}
-					this.maskData.rawNiftiData.write(outputVolPre + "Com_"+componentIndex);
-				} // if
-				componentIndex++;
-			}// while
+					this.outputData.rawNiftiData.write(outputVolPre + "Com_"
+							+ componentIndex);
+				} // if strLine!=null
+				else
+					System.out.println("ERROR: strLine is Null!!!");
+			} //for startComIndex---endComIndex
 			br.close();
 			in.close();
 			fstream.close();
@@ -82,18 +103,20 @@ public class J_MapComponent2Volume {
 
 	public static void main(String[] args) throws NumberFormatException,
 			InvalidImageException, IOException {
-		if (args.length == 5) {
-			String AMatrix = args[0].trim();
-			String mask = args[1].trim();
-			int StartComIndex = Integer.valueOf(args[2].trim());
-			int EndComIndex = Integer.valueOf(args[3].trim());
-			String outPutPre = args[4].trim();
+		if (args.length == 7) {
+			int subID = Integer.valueOf(args[0].trim());
+			String AMatrixFilePre = args[1].trim();
+			String configInfo = args[2].trim();
+			String mask = args[3].trim();
+			int StartComIndex = Integer.valueOf(args[4].trim());
+			int EndComIndex = Integer.valueOf(args[5].trim());
+			String outPutPre = args[6].trim();
 			J_MapComponent2Volume mainHandler = new J_MapComponent2Volume();
-			mainHandler.mapComponent2Volume(AMatrix, mask, StartComIndex,
-					EndComIndex, outPutPre);
+			mainHandler.mapComponent2Volume(subID, AMatrixFilePre, configInfo, mask,
+					StartComIndex, EndComIndex, outPutPre);
 		} else
 			System.out
-					.println("Need para: AMatrix mask startComIndex endComIndex and outputpre");
+					.println("Need para: subID AMatrixFilePre configInfoFile mask startComIndex endComIndex and outputpre");
 
 	}
 
