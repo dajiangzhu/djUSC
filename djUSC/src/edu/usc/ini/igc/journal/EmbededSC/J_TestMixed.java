@@ -130,7 +130,7 @@ public class J_TestMixed {
 					tmpPointer = j;
 				} // if
 			if (tmpPointer != -1) {
-				System.out.println("Good: "+i);
+				System.out.println("Good: "+i+"  sim:"+tmpMax);
 				tmpPlace = corrM_TS[tmpPointer];
 				tmpIndex = orderIndex[tmpPointer];
 				corrM_TS[tmpPointer] = corrM_TS[i];
