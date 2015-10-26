@@ -154,6 +154,8 @@ public class ESL_Service {
 	}
 	
 	public void step1_preset() {
+		processInfo.multiRun_OriDataDir = cmdLine.getOptionValue("od");
+		processInfo.multiRun_OutPutDir = cmdLine.getOptionValue("mo");
 		processInfo.ESL_OutPutDir = cmdLine.getOptionValue("eslo");
 		processInfo.ESL_OptDicIndex++;
 		// save paramaters
@@ -245,8 +247,8 @@ public class ESL_Service {
 		boolean foundTemplate = false;
 		System.out.println("*************************************************** ESL started ... ***************************************************");
 		do {
-			System.out.println("############ OptDicIndex:"+processInfo.ESL_OptDicIndex+" Step-1 started ...");
 			step1_preset();
+			System.out.println("############ OptDicIndex:"+processInfo.ESL_OptDicIndex+" Step-1 started ...");
 			progressService.do_Step1_qsub(processInfo);
 			step1_checkProgress();
 			// the first time executing this bash script
@@ -261,7 +263,7 @@ public class ESL_Service {
 				step2_preset();
 				progressService.do_Step2(processInfo);
 				step2_checkProgress();
-				System.out.println("############ OptDicIndex:"+processInfo.ESL_OptDicIndex+" Step-1 finished ...");
+				System.out.println("############ OptDicIndex:"+processInfo.ESL_OptDicIndex+" Step-2 finished ...");
 				System.out.println("Template:" + processInfo.ESL_OptDicIndex+" Found:Yes  Optimized:Yes");
 			} //if foundTemplate
 		} while (foundTemplate);
