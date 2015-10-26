@@ -18,10 +18,10 @@ public class tmpTools {
 				String lastLine = currentContent.get(currentContent.size() - 1);
 				if (lastLine
 						.equals("*************************************************** ESL finished ... ***************************************************")) {
-					System.out.println("################# Block - 2 is good!");
+					System.out.println("################# Block - "+block+" is good!");
 					lastLine = currentContent.get(currentContent.size() - 2);
-					String optIndex = lastLine.split(":")[1].split("\\s+")[0].trim();
-					resultInfo.add(block+" "+optIndex);
+					int optIndex = Integer.valueOf( lastLine.split(":")[1].split("\\s+")[0].trim() );
+					resultInfo.add(block+" "+(optIndex+1));
 				}
 
 			} else
