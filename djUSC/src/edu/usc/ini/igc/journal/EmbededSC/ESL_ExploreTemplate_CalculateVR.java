@@ -165,6 +165,7 @@ public class ESL_ExploreTemplate_CalculateVR {
 		System.out.println("ESL_OutPutDir: " + ESL_OutPutDir);
 		System.out.println("optDicIndex: " + optDicIndex);
 		System.out.println("dicSize: " + dicSize);
+		System.out.println("tSize: " + tSize);
 		System.out.println("currentSubID: " + currentSubID);
 		System.out.println("subStartID: " + subStartID);
 		System.out.println("subEndID: " + subEndID);
@@ -178,21 +179,22 @@ public class ESL_ExploreTemplate_CalculateVR {
 
 	public static void main(String[] args) {
 
-		if (args.length == 10) {
+		if (args.length == 11) {
 			ESL_ExploreTemplate_CalculateVR mainHandler = new ESL_ExploreTemplate_CalculateVR();
 
 			mainHandler.optDicIndex = Integer.valueOf(args[0].trim()); // 0-399
 			mainHandler.dicSize = Integer.valueOf(args[1].trim()); // 400
-			mainHandler.currentSubID = Integer.valueOf(args[2].trim()); // [subStartID,subEndID]
-			mainHandler.subStartID = Integer.valueOf(args[3].trim()); // 1-58?
-			mainHandler.subEndID = Integer.valueOf(args[4].trim()); // 10-68
+			mainHandler.tSize = Integer.valueOf(args[2].trim());
+			mainHandler.currentSubID = Integer.valueOf(args[3].trim()); // [subStartID,subEndID]
+			mainHandler.subStartID = Integer.valueOf(args[4].trim()); // 1-58?
+			mainHandler.subEndID = Integer.valueOf(args[5].trim()); // 10-68
 			mainHandler.subNum = mainHandler.subEndID - mainHandler.subStartID
 					+ 1;
-			mainHandler.pValueThresholdUB = Double.valueOf(args[5].trim());
-			mainHandler.pValueThresholdLB = Double.valueOf(args[6].trim());
-			mainHandler.pValueThresholdStep = Double.valueOf(args[7].trim());
-			mainHandler.pValueCheckThreshold = Double.valueOf(args[8].trim());
-			mainHandler.ESL_OutPutDir = args[9].trim();
+			mainHandler.pValueThresholdUB = Double.valueOf(args[6].trim());
+			mainHandler.pValueThresholdLB = Double.valueOf(args[7].trim());
+			mainHandler.pValueThresholdStep = Double.valueOf(args[8].trim());
+			mainHandler.pValueCheckThreshold = Double.valueOf(args[9].trim());
+			mainHandler.ESL_OutPutDir = args[10].trim();
 			if (mainHandler.currentSubID < mainHandler.subStartID
 					|| mainHandler.currentSubID > mainHandler.subEndID) {
 				System.out.println("currentSubID should be within the range!");
@@ -210,7 +212,7 @@ public class ESL_ExploreTemplate_CalculateVR {
 			mainHandler.findTheTemplate();
 		} else
 			System.out
-					.println("Input: optDicIndex (0-399), dicSize(400), currentSubID[subStartID,subEndID], subStartID(1-58), subEndID(10-68), pValueThresholdUB(0.75), pValueThresholdLB(0.5), pValueThresholdStep(0.05), pValueCheckThreshold(0.5) and ESL_OutPutDir");
+					.println("Input: optDicIndex (0-399), dicSize(400), tSize, currentSubID[subStartID,subEndID], subStartID(1-58), subEndID(10-68), pValueThresholdUB(0.75), pValueThresholdLB(0.5), pValueThresholdStep(0.05), pValueCheckThreshold(0.5) and ESL_OutPutDir");
 
 	}
 
