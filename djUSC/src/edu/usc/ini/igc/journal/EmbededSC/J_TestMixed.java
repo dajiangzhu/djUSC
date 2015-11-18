@@ -9,6 +9,7 @@ import edu.uga.DICCCOL.stat.Correlation;
 public class J_TestMixed {
 
 	Correlation correlation = new Correlation();
+	public int templateNum = 32;
 
 	public double[][] trsposeM(double[][] data, int row, int column) {
 		double[][] result = new double[column][row];
@@ -19,8 +20,8 @@ public class J_TestMixed {
 	}
 
 	public void checkTmpSigInnerCorre() {
-		double[][] tmpSigA = new double[29][284];
-		for (int t = 0; t < 29; t++) {
+		double[][] tmpSigA = new double[templateNum][284];
+		for (int t = 0; t < templateNum; t++) {
 			double[][] tmp = DicccolUtilIO.loadFileAsArray(
 					"/home/dzhu/Projects/Journal_ESL/ana_templatesig/TemplateSig_"
 							+ t + ".txt", 284, 1);
@@ -29,14 +30,14 @@ public class J_TestMixed {
 		} // for i
 
 		// calculate the corre within the templateSig
-		int[][] indexStatus = new int[29][2];
-		for (int i = 0; i < 29; i++) {
+		int[][] indexStatus = new int[templateNum][2];
+		for (int i = 0; i < templateNum; i++) {
 			indexStatus[i][0] = i;
 			indexStatus[i][1] = 1;
 		}
-		double[][] corrM_inTmpSig = new double[29][29];
-		for (int i = 0; i < 28; i++)
-			for (int j = i + 1; j < 29; j++) {
+		double[][] corrM_inTmpSig = new double[templateNum][templateNum];
+		for (int i = 0; i < templateNum - 1; i++)
+			for (int j = i + 1; j < templateNum; j++) {
 				if (indexStatus[i][1] == 1 && indexStatus[j][1] == 1) {
 					corrM_inTmpSig[i][j] = correlation.Correlation_Pearsons(
 							tmpSigA[i], tmpSigA[j]);
@@ -47,14 +48,14 @@ public class J_TestMixed {
 					}
 				} // if
 			} // for
-		for (int i = 0; i < 29; i++)
+		for (int i = 0; i < templateNum; i++)
 			if (indexStatus[i][1] == 0)
 				System.out.println(i);
 		// DicccolUtilIO
-		// .writeVtkMatrix1(corrM_inTmpSig, 29, 26,
+		// .writeVtkMatrix1(corrM_inTmpSig, templateNum, 26,
 		// "/home/dzhu/Projects/Journal_ESL/ana_templatesig/corrM_inTmpSig.vtk");
 		// DicccolUtilIO
-		// .writeArrayToFile(corrM_inTmpSig, 29, 26, "   ",
+		// .writeArrayToFile(corrM_inTmpSig, templateNum, 26, "   ",
 		// "/home/dzhu/Projects/Journal_ESL/ana_templatesig/corrM_inTmpSig.txt");
 
 	}
@@ -80,72 +81,88 @@ public class J_TestMixed {
 								.loadFileAsArray(
 										"/home/dzhu/Projects/Journal_ESL/ana_templatesig/MOTOR_taskdesign_hrf.txt",
 										284, 26), 284, 26);
-		double[][] tmpSigA = new double[29][284];
-		for (int t = 0; t < 29; t++) {
+		double[][] tmpSigA = new double[templateNum][284];
+		for (int t = 0; t < templateNum; t++) {
 			double[][] tmp = DicccolUtilIO.loadFileAsArray(
-					"/home/dzhu/Projects/Journal_ESL/ana_templatesig/TemplateSig_"
+					"/home/dzhu/Projects/Journal_ESL/ana_templatesig/1_34/TemplateSig_"
 							+ t + ".txt", 284, 1);
 			for (int i = 0; i < 284; i++)
 				tmpSigA[t][i] = tmp[i][0];
 		} // for i
+		DicccolUtilIO.writeArrayToFile(this.trsposeM(tmpSigA, templateNum, 284), 284, templateNum, " ", "/home/dzhu/Projects/Journal_ESL/ana_templatesig/fullTemplateSig.txt");
 
 		// calculate TT
-		double[][] corrM_TT = new double[29][29];
-		for (int i = 0; i < 29; i++)
-			for (int j = 0; j < 29; j++)
+		double[][] corrM_TT = new double[templateNum][templateNum];
+		for (int i = 0; i < templateNum; i++)
+			for (int j = 0; j < templateNum; j++)
 				corrM_TT[i][j] = correlation.Correlation_Pearsons(tmpSigA[i],
 						tmpSigA[j]);
 
-		double[][] corrM_TS = new double[29][26];
-		for (int i = 0; i < 29; i++)
+		double[][] corrM_TS = new double[templateNum][26];
+		for (int i = 0; i < templateNum; i++)
 			for (int j = 0; j < 26; j++)
 				corrM_TS[i][j] = correlation.Correlation_Pearsons(tmpSigA[i],
 						stimulusA[j]);
 
-		double[][] corrM_TSTS = new double[29][29];
-		for (int i = 0; i < 29; i++)
-			for (int j = 0; j < 29; j++)
+		double[][] corrM_TSTS = new double[templateNum][templateNum];
+		for (int i = 0; i < templateNum; i++)
+			for (int j = 0; j < templateNum; j++)
 				corrM_TSTS[i][j] = correlation.Correlation_Pearsons(
 						corrM_TS[i], corrM_TS[j]);
 		DicccolUtilIO
-				.writeVtkMatrix1(corrM_TSTS, 29, 29,
+				.writeVtkMatrix1(corrM_TSTS, templateNum, templateNum,
 						"/home/dzhu/Projects/Journal_ESL/ana_templatesig/corrM_TSTS.vtk");
 		DicccolUtilIO
-				.writeArrayToFile(corrM_TSTS, 29, 29, "   ",
+				.writeArrayToFile(corrM_TSTS, templateNum, templateNum, "   ",
 						"/home/dzhu/Projects/Journal_ESL/ana_templatesig/corrM_TSTS.txt");
+		//print the explore result
+		//
+		for (int i = 0; i < 26; i++) {
+			double tmpMax = -1.0;
+			int tmpPointer = -1;
+			for (int j = 0; j < templateNum; j++) {
+				if(corrM_TS[j][i] > tmpMax)
+				{
+					tmpMax = corrM_TS[j][i];
+					tmpPointer = j;
+				}
+			} //for j
+			System.out.println("Stimulus-"+i+": "+tmpPointer + "("+tmpMax+")");
+		}
 
 		// order the matrix by stimulus
-		int[] orderIndex = new int[29];
-		for(int i=0;i<29;i++)
+		int[] orderIndex = new int[templateNum];
+		for (int i = 0; i < templateNum; i++)
 			orderIndex[i] = i;
 		double[] tmpPlace = new double[284];
 		int tmpIndex = -1;
 		for (int i = 0; i < 26; i++) {
 			double tmpMax = -1.0;
 			int tmpPointer = -1;
-			for (int j = i; j < 29; j++)
+			for (int j = i; j < templateNum; j++)
 				if (corrM_TS[j][i] > tmpMax
 						&& this.checkcorrM_TS(corrM_TS, j, i)) {
 					tmpMax = corrM_TS[j][i];
 					tmpPointer = j;
 				} // if
 			if (tmpPointer != -1) {
-				System.out.println("Good: "+i+"  sim:"+tmpMax);
+				System.out.println("Good: " + i + "  sim:" + tmpMax);
 				tmpPlace = corrM_TS[tmpPointer];
 				tmpIndex = orderIndex[tmpPointer];
 				corrM_TS[tmpPointer] = corrM_TS[i];
-				orderIndex[tmpPointer] = orderIndex[i];				
+				orderIndex[tmpPointer] = orderIndex[i];
 				corrM_TS[i] = tmpPlace;
 				orderIndex[i] = tmpIndex;
-			}
-			else
-				System.out.println("Begin to similar: "+i);
+			} else
+				System.out.println("Begin to similar: " + i);
 		}
-		for(int i=0;i<29;i++)
-		System.out.println(orderIndex[i]);
+		for (int i = 0; i < templateNum; i++)
+			System.out.println(orderIndex[i]);
 		DicccolUtilIO
-				.writeVtkMatrix1(corrM_TS, 29, 26,
+				.writeVtkMatrix1(corrM_TS, templateNum, 26,
 						"/home/dzhu/Projects/Journal_ESL/ana_templatesig/correM_ordered_again.vtk");
+
+
 
 	}
 
