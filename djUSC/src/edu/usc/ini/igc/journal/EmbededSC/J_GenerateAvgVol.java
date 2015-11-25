@@ -16,7 +16,7 @@ public class J_GenerateAvgVol {
 		System.out.println("Loading " + avgVolFile);
 		djNiftiData avgData = new djNiftiData(avgVolFile);
 		for (int s = startSubID + 1; s <= endSubID; s++) {
-			String culVolFile = inputDirPre + "/"+startSubID+"/map2vol/Com_" + comID + "_std.nii.gz";
+			String culVolFile = inputDirPre + "/"+s+"/map2vol/Com_" + comID + "_std.nii.gz";
 			System.out.println("Loading " + culVolFile);
 			djNiftiData curData = new djNiftiData(culVolFile);
 
@@ -28,7 +28,7 @@ public class J_GenerateAvgVol {
 								x, y, z, 0)
 								+ curData.getValueBasedOnVolumeCoordinate(x, y,
 										z, 0);
-						avgData.rawNiftiData.putPix(tmpSub/subNum,
+						avgData.rawNiftiData.putPix(tmpSub,
 								seedVolCoordsReverse);
 					} // for z
 		} // for all subjects

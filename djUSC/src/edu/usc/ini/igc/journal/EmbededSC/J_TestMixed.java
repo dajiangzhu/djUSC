@@ -9,7 +9,7 @@ import edu.uga.DICCCOL.stat.Correlation;
 public class J_TestMixed {
 
 	Correlation correlation = new Correlation();
-	public int templateNum = 36;
+	public int templateNum = 30;
 
 	public double[][] trsposeM(double[][] data, int row, int column) {
 		double[][] result = new double[column][row];
@@ -84,7 +84,7 @@ public class J_TestMixed {
 		double[][] tmpSigA = new double[templateNum][284];
 		for (int t = 0; t < templateNum; t++) {
 			double[][] tmp = DicccolUtilIO.loadFileAsArray(
-					"/home/dzhu/Projects/Journal_ESL/ana_templatesig/44_68/TemplateSig_"
+					"/home/dzhu/Projects/Journal_ESL/ana_templatesig/35_68/TemplateSig_"
 							+ t + ".txt", 284, 1);
 			for (int i = 0; i < 284; i++)
 				tmpSigA[t][i] = tmp[i][0];
