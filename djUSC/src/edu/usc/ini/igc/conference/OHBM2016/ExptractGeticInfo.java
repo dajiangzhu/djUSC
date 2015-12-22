@@ -92,17 +92,29 @@ public class ExptractGeticInfo {
 		
 		int matrixRow = 8;
 		int matrixCol = 311;
+		String strAD = "";
+		String strMCI = "";
+		String strCN = "";
 		
 		for (int i = 0; i < rowNum; i++) { //for each line
 			String tmpLine = "";
 			for (int j = 0; j < 4; j++)
 				tmpLine += allData[i][j].trim() + " ";
 			if (allData[i][3].trim().equals("AD"))
+			{
 				ADList.add(tmpLine);
+				strAD += allData[i][0].trim() + " ";
+			}
 			if (allData[i][3].trim().equals("MCI"))
+			{
 				MCIList.add(tmpLine);
+				strMCI += allData[i][0].trim() + " ";
+			}
 			if (allData[i][3].trim().equals("CN"))
+			{
 				CNList.add(tmpLine);
+				strCN += allData[i][0].trim() + " ";
+			}
 
 			//fill into a matrix
 			int[][] currentMatrix = new int[matrixRow][matrixCol];
@@ -116,6 +128,9 @@ public class ExptractGeticInfo {
 		DicccolUtilIO.writeArrayListToFile(ADList, "AD_info.txt");
 		DicccolUtilIO.writeArrayListToFile(MCIList, "MCI_info.txt");
 		DicccolUtilIO.writeArrayListToFile(CNList, "CN_info.txt");
+		System.out.println("AD: "+strAD);
+		System.out.println("MCI: "+strMCI);
+		System.out.println("CN: "+strCN);
 		
 
 	}
