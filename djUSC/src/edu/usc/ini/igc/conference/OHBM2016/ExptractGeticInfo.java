@@ -89,56 +89,76 @@ public class ExptractGeticInfo {
 		List<String> CNList = new ArrayList<String>();
 		String[][] allData = DicccolUtilIO.loadFileAsStringArray(
 				"COMPILED.SNPS.ISBI.info.txt", rowNum, colNum);
-		
+
 		int matrixRow = 8;
 		int matrixCol = 311;
 		String strAD = "";
 		String strMCI = "";
 		String strCN = "";
-		
-		for (int i = 0; i < rowNum; i++) { //for each line
+
+		for (int i = 0; i < rowNum; i++) { // for each line
 			String tmpLine = "";
 			for (int j = 0; j < 4; j++)
 				tmpLine += allData[i][j].trim() + " ";
-			if (allData[i][3].trim().equals("AD"))
-			{
+			if (allData[i][3].trim().equals("AD")) {
 				ADList.add(tmpLine);
 				strAD += allData[i][0].trim() + " ";
 			}
-			if (allData[i][3].trim().equals("MCI"))
-			{
+			if (allData[i][3].trim().equals("MCI")) {
 				MCIList.add(tmpLine);
 				strMCI += allData[i][0].trim() + " ";
 			}
-			if (allData[i][3].trim().equals("CN"))
-			{
+			if (allData[i][3].trim().equals("CN")) {
 				CNList.add(tmpLine);
 				strCN += allData[i][0].trim() + " ";
 			}
 
-			//fill into a matrix
+			// fill into a matrix
 			int[][] currentMatrix = new int[matrixRow][matrixCol];
 			int count = 0;
 			for (int j = 4; j < colNum; j++) {
-				currentMatrix[count/matrixCol][count%matrixCol] = Integer.valueOf( allData[i][j] );
+				currentMatrix[count / matrixCol][count % matrixCol] = Integer
+						.valueOf(allData[i][j]);
 				count++;
 			} // for j
-			DicccolUtilIO.writeIntArrayToFile(currentMatrix, matrixRow, matrixCol, " ", "./"+allData[i][3].trim()+"/"+allData[i][0].trim()+"_"+allData[i][3].trim()+".txt");
+			DicccolUtilIO.writeIntArrayToFile(currentMatrix, matrixRow,
+					matrixCol, " ", "./" + allData[i][3].trim() + "/"
+							+ allData[i][0].trim() + "_" + allData[i][3].trim()
+							+ ".txt");
 		} // for i
 		DicccolUtilIO.writeArrayListToFile(ADList, "AD_info.txt");
 		DicccolUtilIO.writeArrayListToFile(MCIList, "MCI_info.txt");
 		DicccolUtilIO.writeArrayListToFile(CNList, "CN_info.txt");
-		System.out.println("AD: "+strAD);
-		System.out.println("MCI: "+strMCI);
-		System.out.println("CN: "+strCN);
-		
+		System.out.println("AD: " + strAD);
+		System.out.println("MCI: " + strMCI);
+		System.out.println("CN: " + strCN);
+	}
+
+	public void generateSNPList() throws IOException {
+		FileInputStream fis = new FileInputStream(new File(
+				"./COMPILED.SNPS.ISBI.xlsx"));
+		XSSFWorkbook workbook = new XSSFWorkbook(fis);
+		XSSFSheet spreadsheet = workbook.getSheet("COMPILED.SNPS.ISBI");
+		int colNum = 2495;
+		String currentCellContent = "";
+		List<String> SNPNameList = new ArrayList<String>();
+
+		for (int j = 7; j < colNum; j++) {
+			currentCellContent = spreadsheet.getRow(0).getCell(j)
+					.getStringCellValue().trim();
+			SNPNameList.add(currentCellContent);
+
+		} // for j
+		DicccolUtilIO.writeArrayListToFile(SNPNameList,
+				"COMPILED.SNPS.ISBI.info.SNPList.txt");
 
 	}
 
 	public static void main(String[] args) throws IOException {
 		ExptractGeticInfo mainHandler = new ExptractGeticInfo();
-//		mainHandler.extractSNPInfo();
-		mainHandler.generateGroupData();
+		// mainHandler.extractSNPInfo();
+		// mainHandler.generateGroupData();
+		mainHandler.generateSNPList();
 
 	}
 
