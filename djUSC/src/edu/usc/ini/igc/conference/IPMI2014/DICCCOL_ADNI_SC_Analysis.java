@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.math.MathException;
 
 import edu.uga.DICCCOL.DicccolUtilIO;
 import edu.uga.DICCCOL.fiberBundleService;
@@ -136,7 +135,7 @@ public class DICCCOL_ADNI_SC_Analysis {
 		return dis;
 	}
 
-	public void anaTMDistance() throws IllegalArgumentException, MathException {
+	public void anaTMDistance() throws IllegalArgumentException {
 		double pValuethreshold = 0.05;
 		pValuethreshold /= 2.0;
 		pValuethreshold /= 358.0;
@@ -187,7 +186,7 @@ public class DICCCOL_ADNI_SC_Analysis {
 		} //for all DICCCOLs
 	}
 
-	public void anaTMDistance_sfn() throws IllegalArgumentException, MathException {
+	public void anaTMDistance_sfn() throws IllegalArgumentException {
 		double pValuethreshold = 0.05;
 		pValuethreshold /= 358.0;
 		double[][] CNE3_Array;
@@ -268,7 +267,7 @@ public class DICCCOL_ADNI_SC_Analysis {
 		
 	}
 	
-	public static void main(String[] args) throws IllegalArgumentException, MathException {
+	public static void main(String[] args) throws IllegalArgumentException {
 		DICCCOL_ADNI_SC_Analysis mainHandler = new DICCCOL_ADNI_SC_Analysis();
 
 		// For anaCodingResult
