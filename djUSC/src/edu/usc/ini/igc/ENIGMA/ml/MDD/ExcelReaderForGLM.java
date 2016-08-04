@@ -23,7 +23,7 @@ public class ExcelReaderForGLM {
 
 	public String homeDir = "";
 	public List<String> CenterList = new ArrayList<String>();
-	public Map<String, String[][]> allData = new HashMap<String, String[][]>();
+	public Map<String, CenterInfo> allData = new HashMap<String, CenterInfo>();
 
 	public void formatForGLM() {
 		for (int i = 0; i < CenterList.size(); i++) {
@@ -43,7 +43,7 @@ public class ExcelReaderForGLM {
 		File excel_LRVolume = null;
 		Workbook w_LRVolume = null;
 		Sheet sheet_LRVolume = null;
-		for (int i = 0; i < 1; i++) {
+		for (int i = 0; i < CenterList.size(); i++) {
 			String[] lineArray = CenterList.get(i).trim().split("\\s+");
 			String currentCenterName = lineArray[0];
 			int numOfSub = Integer.valueOf(lineArray[1]);
@@ -88,10 +88,9 @@ public class ExcelReaderForGLM {
 						currentData[row-1][featureCount+col-1] = (cell.getContents().trim());
 				} // for col
 			} // for row
-			DicccolUtilIO.writeStringArrayToFile(currentData, numOfSub, FeatureNum_SurfAvg+FeatureNum_ThickAvg+FeatureNum_LRVolume, " ", "testData.txt");
-			
+			allData.put(currentCenterName, new CenterInfo(currentCenterName,numOfSub,currentData));
+			//DicccolUtilIO.writeStringArrayToFile(currentData, numOfSub, FeatureNum_SurfAvg+FeatureNum_ThickAvg+FeatureNum_LRVolume, " ", "testData.txt");
 		} //for centers
-
 	}
 
 	public static void main(String[] args) throws BiffException, IOException {
