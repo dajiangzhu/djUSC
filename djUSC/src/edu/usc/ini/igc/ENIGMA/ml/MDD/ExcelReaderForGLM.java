@@ -18,6 +18,7 @@ import edu.uga.DICCCOL.DicccolUtilIO;
 public class ExcelReaderForGLM {
 	
 	//haha
+	//jj
 	final int FeatureNum_SurfAvg = 72;
 	final int FeatureNum_ThickAvg = 72;
 	final int FeatureNum_LRVolume = 16;
