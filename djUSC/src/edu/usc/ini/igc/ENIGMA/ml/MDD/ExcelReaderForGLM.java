@@ -17,6 +17,7 @@ import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
 import edu.uga.DICCCOL.DicccolUtilIO;
 public class ExcelReaderForGLM {
 	
+	//haha
 	final int FeatureNum_SurfAvg = 72;
 	final int FeatureNum_ThickAvg = 72;
 	final int FeatureNum_LRVolume = 16;
