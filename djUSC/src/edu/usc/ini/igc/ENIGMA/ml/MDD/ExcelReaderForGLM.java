@@ -40,20 +40,25 @@ public class ExcelReaderForGLM {
 	}
 
 	public double[][] calMissingRate(String strPre) {
-		System.out.println("##############calMissingRate("+strPre+")############");
-		System.out.println("---feature removed: "+featureRemoveList.size());
+		System.out.println("##############calMissingRate(" + strPre
+				+ ")############");
+		System.out.println("---feature removed: " + featureRemoveList.size());
 		System.out.println(featureRemoveList);
 		int totalSubRemoved = 0;
-		for (int c = 0; c < CenterList.size(); c++)
-		{
+		for (int c = 0; c < CenterList.size(); c++) {
 			String[] lineArray = CenterList.get(c).trim().split("\\s+");
 			String currentCenterName = lineArray[0];
-			System.out.println("---"+ currentCenterName);
-			System.out.println("subjects removed: "+allCenter.get(currentCenterName).subRemoveList.size());
+			System.out.println("---" + currentCenterName);
+			System.out.println("subjects removed: "
+					+ allCenter.get(currentCenterName).subRemoveList.size());
 			System.out.println(allCenter.get(currentCenterName).subRemoveList);
-			totalSubRemoved +=allCenter.get(currentCenterName).subRemoveList.size();
+			totalSubRemoved += allCenter.get(currentCenterName).subRemoveList
+					.size();
 		}
-		System.out.println("############## FeatureRemoved:"+featureRemoveList.size()+"                 TotalSubRemoved:"+totalSubRemoved+"  ############");
+		System.out.println("############## FeatureRemoved:"
+				+ featureRemoveList.size()
+				+ "                 TotalSubRemoved:" + totalSubRemoved
+				+ "  ############");
 
 		double[][] dataMissingNum = new double[FeatureNum_Total][CenterList
 				.size()];
@@ -73,7 +78,7 @@ public class ExcelReaderForGLM {
 					for (int s = 0; s < numOfSub; s++) {
 						if (!allCenter.get(currentCenterName).subRemoveList
 								.contains(s))
-							if (currentData[s][f].equals("NA"))
+							if (currentData[s][f].equals("NA") || currentData[s][f].equals("x"))
 								dataMissingNum[f][c]++;
 					} // for s
 					dataMissingRate[f][c] = dataMissingNum[f][c]
@@ -87,10 +92,11 @@ public class ExcelReaderForGLM {
 	}
 
 	public void screenData() {
-
+		System.out.println("############## screenData ############");
 		double removeRate = 0.03;
 		double[][] dataMissingRate = this.calMissingRate("before");
-		
+
+		// Remove features which have the most NAs
 		for (int f = 0; f < FeatureNum_Total; f++) {
 			boolean bRemove = false;
 			for (int c = 0; c < CenterList.size(); c++)
@@ -100,6 +106,7 @@ public class ExcelReaderForGLM {
 				featureRemoveList.add(f);
 		} // for f
 
+		// Remove subjects which have NAs
 		for (int c = 0; c < CenterList.size(); c++) {
 			String[] lineArray = CenterList.get(c).trim().split("\\s+");
 			String currentCenterName = lineArray[0];
@@ -108,7 +115,7 @@ public class ExcelReaderForGLM {
 			for (int f = 0; f < FeatureNum_Total; f++) {
 				if (!featureRemoveList.contains(f)) {
 					for (int s = 0; s < numOfSub; s++)
-						if (currentData[s][f].equals("NA"))
+						if (currentData[s][f].equals("NA") || currentData[s][f].equals("x"))
 							if (!allCenter.get(currentCenterName).subRemoveList
 									.contains(s))
 								allCenter.get(currentCenterName).subRemoveList
@@ -117,9 +124,117 @@ public class ExcelReaderForGLM {
 			} // for f
 		} // for c
 		this.calMissingRate("after");
+
+		// Fill the dataAfterScreen
+		int numOfLeftFeature = FeatureNum_Total - featureRemoveList.size();
+		for (int c = 0; c < CenterList.size(); c++) {
+			String[] lineArray = CenterList.get(c).trim().split("\\s+");
+			String currentCenterName = lineArray[0];
+			int numOfSub = Integer.valueOf(lineArray[1]);
+			int numOfLeftSub = numOfSub
+					- allCenter.get(currentCenterName).subRemoveList.size();
+			allCenter.get(currentCenterName).numOfLeftSub = numOfLeftSub;
+			double[][] dataAfterScreen = new double[numOfLeftSub][numOfLeftFeature];
+			double[][] covariatesAfterScreen = new double[numOfLeftSub][2];
+			String[] labelAfterScreen = new String[numOfLeftSub];
+			int leftSubCount = 0;
+			for (int s = 0; s < numOfSub; s++) {
+				int leftFeatureCount = 0;
+				if (!allCenter.get(currentCenterName).subRemoveList.contains(s)) {
+					for (int f = 0; f < FeatureNum_Total; f++) {
+						if (!featureRemoveList.contains(f)) {
+							dataAfterScreen[leftSubCount][leftFeatureCount] = Double
+									.valueOf(allCenter.get(currentCenterName).oriData[s][f]);
+							leftFeatureCount++;
+						} // if this feature was not removed
+					} // for f
+					labelAfterScreen[leftSubCount] = String.valueOf(allCenter
+							.get(currentCenterName).oriCovariates[s][0]);
+					covariatesAfterScreen[leftSubCount][0] = allCenter
+							.get(currentCenterName).oriCovariates[s][1]; // Age
+					covariatesAfterScreen[leftSubCount][1] = allCenter
+							.get(currentCenterName).oriCovariates[s][2]; // Sex
+					leftSubCount++;
+				} // if this subject was not removed
+			} // for s
+			allCenter.get(currentCenterName).dataAfterScreen = dataAfterScreen;
+			allCenter.get(currentCenterName).covariatesAfterScreen = covariatesAfterScreen;
+			allCenter.get(currentCenterName).labelAfterScreen = labelAfterScreen;
+			DicccolUtilIO.writeArrayToFile(dataAfterScreen,
+					numOfLeftSub,
+					numOfLeftFeature, " ", "dataAfterScreen_" + currentCenterName
+							+ ".txt");
+		} // for c
+	}
+
+	public void GlmFit() {
+		System.out.println("############## GlmFit ############");
+		int numOfSubTotalLeft = 0;
+		int numOfLeftFeature = FeatureNum_Total - featureRemoveList.size();
+		for (int c = 0; c < CenterList.size(); c++) {
+			String[] lineArray = CenterList.get(c).trim().split("\\s+");
+			String currentCenterName = lineArray[0];
+			numOfSubTotalLeft += allCenter.get(currentCenterName).numOfLeftSub;
+		} // for c
+		double[][] allY = new double[numOfSubTotalLeft][numOfLeftFeature];
+		double[][] allX = new double[numOfSubTotalLeft][2];
+
+		// Fill allX and allY
+		int totalSubCount = 0;
+		for (int c = 0; c < CenterList.size(); c++) {
+			String[] lineArray = CenterList.get(c).trim().split("\\s+");
+			String currentCenterName = lineArray[0];
+			for (int s = 0; s < allCenter.get(currentCenterName).numOfLeftSub; s++) {
+				for (int f = 0; f < numOfLeftFeature; f++)
+					allY[totalSubCount][f] = allCenter.get(currentCenterName).dataAfterScreen[s][f];
+				allX[totalSubCount][0] = allCenter.get(currentCenterName).covariatesAfterScreen[s][0];
+				allX[totalSubCount][1] = allCenter.get(currentCenterName).covariatesAfterScreen[s][1];
+				totalSubCount++;
+			}
+		} // for c
+
+		// GLM fit
+		double[][] allResiduals = new double[numOfSubTotalLeft][numOfLeftFeature];
+		OLSMultipleLinearRegression regression = new OLSMultipleLinearRegression();
+//		regression.setNoIntercept(true);
+
+		double[] currentY = new double[numOfSubTotalLeft];
+		for (int f = 0; f < numOfLeftFeature; f++) {
+			System.out.println("GLM for the " + f + "/" + numOfLeftFeature
+					+ " th feature...");
+			for (int s = 0; s < numOfSubTotalLeft; s++)
+				currentY[s] = allY[s][f];
+			regression.newSampleData(currentY, allX);
+			double[] residuals = regression.estimateResiduals();
+			for (int s = 0; s < numOfSubTotalLeft; s++)
+				allResiduals[s][f] = residuals[s];
+		} // for f
+
+		// Save to different center
+		totalSubCount = 0;
+		for (int c = 0; c < CenterList.size(); c++) {
+			String[] lineArray = CenterList.get(c).trim().split("\\s+");
+			String currentCenterName = lineArray[0];
+			double[][] dataAfterGLM = new double[allCenter
+					.get(currentCenterName).numOfLeftSub][numOfLeftFeature];
+			for (int s = 0; s < allCenter.get(currentCenterName).numOfLeftSub; s++) {
+				for (int f = 0; f < numOfLeftFeature; f++)
+					dataAfterGLM[s][f] = allResiduals[totalSubCount][f];
+				totalSubCount++;
+			} // for s
+			allCenter.get(currentCenterName).dataAfterGLM = dataAfterGLM;
+			DicccolUtilIO.writeArrayToFile(dataAfterGLM,
+					allCenter.get(currentCenterName).numOfLeftSub,
+					numOfLeftFeature, " ", "dataAfterGLM_" + currentCenterName
+							+ ".txt");
+		} // for c
+		DicccolUtilIO.writeArrayToFile(allResiduals, numOfSubTotalLeft,
+				numOfLeftFeature, " ", "dataAfterGLM_All.txt");
+
 	}
 
 	public void loadingAllCenters() throws BiffException, IOException {
+		System.out.println("############## loadingAllCenters ############");
 		this.CenterList = DicccolUtilIO.loadFileToArrayList(this.homeDir
 				+ "\\MDD_Center_List.txt");
 		File excel_SurfAvg = null;
@@ -141,7 +256,7 @@ public class ExcelReaderForGLM {
 			String[] oriSubIDList = new String[numOfSub];
 			String[][] oriData = new String[numOfSub][FeatureNum_SurfAvg
 					+ FeatureNum_ThickAvg + FeatureNum_LRVolume];
-			double[][] oriCovariates = new double[numOfSub][3]; //Dx, Age, Sex
+			double[][] oriCovariates = new double[numOfSub][3]; // Dx, Age, Sex
 			int featureCount = 0;
 			System.out.println("Loading Center - " + currentCenterName
 					+ "              NumOfSub - " + numOfSub);
@@ -152,10 +267,11 @@ public class ExcelReaderForGLM {
 			w_SurfAvg = Workbook.getWorkbook(excel_SurfAvg);
 			sheet_SurfAvg = w_SurfAvg
 					.getSheet("CorticalMeasuresENIGMA_SurfAvg");
-			
+
 			for (int col = 1; col <= FeatureNum_SurfAvg; col++)
-				oriFeatureIDList[featureCount + col - 1] = sheet_SurfAvg.getCell(col, 0).getContents().trim();
-			
+				oriFeatureIDList[featureCount + col - 1] = sheet_SurfAvg
+						.getCell(col, 0).getContents().trim();
+
 			for (int row = 1; row <= numOfSub; row++) {
 				for (int col = 1; col <= FeatureNum_SurfAvg; col++) {
 					Cell cell = sheet_SurfAvg.getCell(col, row);
@@ -172,10 +288,11 @@ public class ExcelReaderForGLM {
 			w_ThickAvg = Workbook.getWorkbook(excel_ThickAvg);
 			sheet_ThickAvg = w_ThickAvg
 					.getSheet("CorticalMeasuresENIGMA_ThickAvg");
-			
+
 			for (int col = 1; col <= FeatureNum_ThickAvg; col++)
-				oriFeatureIDList[featureCount + col - 1] = sheet_ThickAvg.getCell(col, 0).getContents().trim();
-			
+				oriFeatureIDList[featureCount + col - 1] = sheet_ThickAvg
+						.getCell(col, 0).getContents().trim();
+
 			for (int row = 1; row <= numOfSub; row++) {
 				for (int col = 1; col <= FeatureNum_ThickAvg; col++) {
 					Cell cell = sheet_ThickAvg.getCell(col, row);
@@ -191,10 +308,11 @@ public class ExcelReaderForGLM {
 					+ "\\LandRvolumes.xls");
 			w_LRVolume = Workbook.getWorkbook(excel_LRVolume);
 			sheet_LRVolume = w_LRVolume.getSheet("LandRvolumes");
-			
+
 			for (int col = 1; col <= FeatureNum_LRVolume; col++)
-				oriFeatureIDList[featureCount + col - 1] = sheet_LRVolume.getCell(col, 0).getContents().trim();
-			
+				oriFeatureIDList[featureCount + col - 1] = sheet_LRVolume
+						.getCell(col, 0).getContents().trim();
+
 			for (int row = 1; row <= numOfSub; row++) {
 				for (int col = 1; col <= FeatureNum_LRVolume; col++) {
 					Cell cell = sheet_LRVolume.getCell(col, row);
@@ -203,27 +321,25 @@ public class ExcelReaderForGLM {
 								.getContents().trim());
 				} // for col
 			} // for row
-			
-			//Covariates
+
+			// Covariates
 			excel_Covariates = new File(this.homeDir + "\\" + currentCenterName
 					+ "\\Covariates.xls");
 			w_Covariates = Workbook.getWorkbook(excel_Covariates);
 			sheet_Covariates = w_Covariates.getSheet("Covariates");
 			for (int row = 1; row <= numOfSub; row++) {
-				oriSubIDList[row-1] = sheet_Covariates.getCell(0, row).getContents().trim();
-				for (int col = 1; col <= 3; col++) { //Dx Age Sex
+				oriSubIDList[row - 1] = sheet_Covariates.getCell(0, row)
+						.getContents().trim();
+				for (int col = 1; col <= 3; col++) { // Dx Age Sex
 					Cell cell = sheet_Covariates.getCell(col, row);
 					if (cell.getContents().trim().length() != 0)
-						oriCovariates[row-1][col-1] = Double.valueOf(cell
+						oriCovariates[row - 1][col - 1] = Double.valueOf(cell
 								.getContents().trim());
 				} // for col
 			} // for row
-			
+
 			allCenter.put(currentCenterName, new CenterInfo(currentCenterName,
 					numOfSub, oriSubIDList, oriData, oriCovariates));
-			// DicccolUtilIO.writeStringArrayToFile(currentData, numOfSub,
-			// FeatureNum_SurfAvg+FeatureNum_ThickAvg+FeatureNum_LRVolume, " ",
-			// "testData.txt");
 		} // for centers
 	}
 
@@ -236,6 +352,7 @@ public class ExcelReaderForGLM {
 		mainHandler.homeDir = args[0].trim();
 		mainHandler.loadingAllCenters();
 		mainHandler.screenData();
+		mainHandler.GlmFit();
 
 		// /////////////////////
 		// mainHandler.test();

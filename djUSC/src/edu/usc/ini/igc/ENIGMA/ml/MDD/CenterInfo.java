@@ -7,9 +7,14 @@ public class CenterInfo {
 
 	String centerName = "";
 	int numOfSub = -1;
+	int numOfLeftSub = -1;
 	String[] oriSubIDList = null;
 	double[][] oriCovariates = null; //Dx, Age, Sex
 	String[][] oriData = null;
+	double[][] dataAfterScreen = null;
+	double[][] covariatesAfterScreen = null;
+	String[] labelAfterScreen = null;
+	double[][] dataAfterGLM = null;
 	List<Integer> subRemoveList = new ArrayList<Integer>();
 
 
