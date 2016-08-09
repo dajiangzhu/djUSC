@@ -15,13 +15,14 @@ import jxl.read.biff.BiffException;
 import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
 
 import edu.uga.DICCCOL.DicccolUtilIO;
+import edu.uga.DICCCOL.stat.SimpleTTest;
 
 public class ExcelReaderForGLM {
 
 	// haha
 	// jj
 	final int FeatureNum_SurfAvg = 72;
-	final int FeatureNum_ThickAvg = 72;
+	final int FeatureNum_ThickAvg = 68;
 	final int FeatureNum_LRVolume = 14;// 16
 	int FeatureNum_Total = FeatureNum_SurfAvg + FeatureNum_ThickAvg
 			+ FeatureNum_LRVolume;
@@ -31,13 +32,14 @@ public class ExcelReaderForGLM {
 	public Map<String, CenterInfo> allCenter = new HashMap<String, CenterInfo>();
 	public List<Integer> featureRemoveList = new ArrayList<Integer>();
 	public String[] oriFeatureIDList = new String[FeatureNum_Total];
+	String[] featureIDListAfterScreen = null;
 
-	public void formatForGLM() {
-		for (int i = 0; i < CenterList.size(); i++) {
-			String currentCenterName = CenterList.get(i);
-			System.out.println("Loading Center - " + currentCenterName);
-		}
-	}
+	double[][] allY = null;
+	double[][] allResiduals = null;
+	List<String> allLabelAfterScreen = new ArrayList<String>();
+	int numOfSubTotalLeft = 0;
+	
+	List<Integer> survivedTTestFeatures = new ArrayList<Integer>();
 
 	public double[][] calMissingRate(String strPre) {
 		System.out.println("##############calMissingRate(" + strPre
@@ -78,7 +80,8 @@ public class ExcelReaderForGLM {
 					for (int s = 0; s < numOfSub; s++) {
 						if (!allCenter.get(currentCenterName).subRemoveList
 								.contains(s))
-							if (currentData[s][f].equals("NA") || currentData[s][f].equals("x"))
+							if (currentData[s][f].equals("NA")
+									|| currentData[s][f].equals("x"))
 								dataMissingNum[f][c]++;
 					} // for s
 					dataMissingRate[f][c] = dataMissingNum[f][c]
@@ -105,6 +108,8 @@ public class ExcelReaderForGLM {
 			if (!featureRemoveList.contains(f) && bRemove)
 				featureRemoveList.add(f);
 		} // for f
+		featureIDListAfterScreen = new String[FeatureNum_Total
+				- featureRemoveList.size()];
 
 		// Remove subjects which have NAs
 		for (int c = 0; c < CenterList.size(); c++) {
@@ -115,7 +120,8 @@ public class ExcelReaderForGLM {
 			for (int f = 0; f < FeatureNum_Total; f++) {
 				if (!featureRemoveList.contains(f)) {
 					for (int s = 0; s < numOfSub; s++)
-						if (currentData[s][f].equals("NA") || currentData[s][f].equals("x"))
+						if (currentData[s][f].equals("NA")
+								|| currentData[s][f].equals("x"))
 							if (!allCenter.get(currentCenterName).subRemoveList
 									.contains(s))
 								allCenter.get(currentCenterName).subRemoveList
@@ -145,9 +151,12 @@ public class ExcelReaderForGLM {
 						if (!featureRemoveList.contains(f)) {
 							dataAfterScreen[leftSubCount][leftFeatureCount] = Double
 									.valueOf(allCenter.get(currentCenterName).oriData[s][f]);
+							featureIDListAfterScreen[leftFeatureCount] = oriFeatureIDList[f];
 							leftFeatureCount++;
 						} // if this feature was not removed
 					} // for f
+					allLabelAfterScreen.add(String.valueOf(allCenter
+							.get(currentCenterName).oriCovariates[s][0]));
 					labelAfterScreen[leftSubCount] = String.valueOf(allCenter
 							.get(currentCenterName).oriCovariates[s][0]);
 					covariatesAfterScreen[leftSubCount][0] = allCenter
@@ -160,24 +169,61 @@ public class ExcelReaderForGLM {
 			allCenter.get(currentCenterName).dataAfterScreen = dataAfterScreen;
 			allCenter.get(currentCenterName).covariatesAfterScreen = covariatesAfterScreen;
 			allCenter.get(currentCenterName).labelAfterScreen = labelAfterScreen;
-			DicccolUtilIO.writeArrayToFile(dataAfterScreen,
-					numOfLeftSub,
-					numOfLeftFeature, " ", "dataAfterScreen_" + currentCenterName
-							+ ".txt");
+			DicccolUtilIO.writeArrayToFile(dataAfterScreen, numOfLeftSub,
+					numOfLeftFeature, " ", "dataAfterScreen_"
+							+ currentCenterName + ".txt");
 		} // for c
+	}
+
+	public void statisticTest(double[][] data) {
+		System.out.println("############## statisticTest ############");
+		SimpleTTest tTest = new SimpleTTest();
+		int numOfLeftFeature = FeatureNum_Total - featureRemoveList.size();
+		int numOfControl = 0;
+		int numOfPatient = 0;
+		for (int s = 0; s < numOfSubTotalLeft; s++)
+			if (Double.valueOf( allLabelAfterScreen.get(s).trim())==0.0)
+				numOfControl++;
+			else
+				numOfPatient++;
+
+		System.out.println("NumOfControl: "+numOfControl+"      NumOfPatient: "+numOfPatient);
+		double[] controlData = new double[numOfControl];
+		double[] patientData = new double[numOfPatient];
+
+		for (int f = 0; f < numOfLeftFeature; f++) {
+			int controlCount = 0;
+			int patientCount = 0;
+			for (int s = 0; s < numOfSubTotalLeft; s++)
+				if (Double.valueOf( allLabelAfterScreen.get(s).trim())==0.0)
+					controlData[controlCount++] = data[s][f];
+				else
+					patientData[patientCount++] = data[s][f];
+			double pValue = tTest.tTest(controlData, patientData);
+			if(pValue<0.05)
+				survivedTTestFeatures.add(f);
+			System.out.println("Feature "+f+"("+featureIDListAfterScreen[f]+"): "+pValue);
+		} // for f
+
 	}
 
 	public void GlmFit() {
 		System.out.println("############## GlmFit ############");
-		int numOfSubTotalLeft = 0;
+
 		int numOfLeftFeature = FeatureNum_Total - featureRemoveList.size();
 		for (int c = 0; c < CenterList.size(); c++) {
 			String[] lineArray = CenterList.get(c).trim().split("\\s+");
 			String currentCenterName = lineArray[0];
 			numOfSubTotalLeft += allCenter.get(currentCenterName).numOfLeftSub;
 		} // for c
-		double[][] allY = new double[numOfSubTotalLeft][numOfLeftFeature];
-		double[][] allX = new double[numOfSubTotalLeft][2];
+		allY = new double[numOfSubTotalLeft][numOfLeftFeature];
+		// double[][] allX = new double[numOfSubTotalLeft][2]; //if only regress
+		// Age and Sex
+		double[][] allX = new double[numOfSubTotalLeft][2 + CenterList.size()]; // regress
+																				// Age,
+																				// Sex
+																				// and
+																				// Site
 
 		// Fill allX and allY
 		int totalSubCount = 0;
@@ -189,14 +235,21 @@ public class ExcelReaderForGLM {
 					allY[totalSubCount][f] = allCenter.get(currentCenterName).dataAfterScreen[s][f];
 				allX[totalSubCount][0] = allCenter.get(currentCenterName).covariatesAfterScreen[s][0];
 				allX[totalSubCount][1] = allCenter.get(currentCenterName).covariatesAfterScreen[s][1];
+				for (int site = 0; site < CenterList.size(); site++)
+					if (site == c)
+						allX[totalSubCount][2 + site] = 1.0;
+					else
+						allX[totalSubCount][2 + site] = 0.0;
 				totalSubCount++;
-			}
+			} // for s
 		} // for c
+		
+		this.statisticTest(allY);
 
 		// GLM fit
-		double[][] allResiduals = new double[numOfSubTotalLeft][numOfLeftFeature];
+		allResiduals = new double[numOfSubTotalLeft][numOfLeftFeature];
 		OLSMultipleLinearRegression regression = new OLSMultipleLinearRegression();
-//		regression.setNoIntercept(true);
+		regression.setNoIntercept(true);
 
 		double[] currentY = new double[numOfSubTotalLeft];
 		for (int f = 0; f < numOfLeftFeature; f++) {
@@ -209,7 +262,8 @@ public class ExcelReaderForGLM {
 			for (int s = 0; s < numOfSubTotalLeft; s++)
 				allResiduals[s][f] = residuals[s];
 		} // for f
-
+//		this.statisticTest(allResiduals);
+		
 		// Save to different center
 		totalSubCount = 0;
 		for (int c = 0; c < CenterList.size(); c++) {
@@ -230,6 +284,44 @@ public class ExcelReaderForGLM {
 		} // for c
 		DicccolUtilIO.writeArrayToFile(allResiduals, numOfSubTotalLeft,
 				numOfLeftFeature, " ", "dataAfterGLM_All.txt");
+
+		// Prepare the input data for distributed Lasso
+		List<String> distributedLassoInputDataAll = new ArrayList<String>();
+		List<String> distributedLassoInputDataAll_WithoutGLM = new ArrayList<String>();
+		for (int c = 0; c < CenterList.size(); c++) {
+			String[] lineArray = CenterList.get(c).trim().split("\\s+");
+			String currentCenterName = lineArray[0];
+			List<String> distributedLassoInputData = new ArrayList<String>();
+			List<String> distributedLassoInputData_WithoutGLM = new ArrayList<String>();
+			for (int s = 0; s < allCenter.get(currentCenterName).numOfLeftSub; s++) {
+				String currentSubData = "";
+				String currentSubData_WithoutGLM = "";
+				currentSubData += allCenter.get(currentCenterName).labelAfterScreen[s]
+						+ ",";
+				currentSubData_WithoutGLM += allCenter.get(currentCenterName).labelAfterScreen[s]
+						+ ",";
+				for (int f = 0; f < numOfLeftFeature; f++) {
+					currentSubData += allCenter.get(currentCenterName).dataAfterGLM[s][f]
+							+ " ";
+					currentSubData_WithoutGLM += allCenter
+							.get(currentCenterName).dataAfterScreen[s][f] + " ";
+				}
+				distributedLassoInputData.add(currentSubData);
+				distributedLassoInputData_WithoutGLM
+						.add(currentSubData_WithoutGLM);
+			} // for s
+			allCenter.get(currentCenterName).distributedLassoInputData = distributedLassoInputData;
+			distributedLassoInputDataAll.addAll(distributedLassoInputData);
+			distributedLassoInputDataAll_WithoutGLM
+					.addAll(distributedLassoInputData_WithoutGLM);
+			DicccolUtilIO.writeArrayListToFile(distributedLassoInputData,
+					"distributedLassoInputData_" + currentCenterName + ".txt");
+		} // for c
+		DicccolUtilIO.writeArrayListToFile(distributedLassoInputDataAll,
+				"distributedLassoInputDataAll.txt");
+		DicccolUtilIO.writeArrayListToFile(
+				distributedLassoInputDataAll_WithoutGLM,
+				"distributedLassoInputDataAll_WithoutGLM.txt");
 
 	}
 
@@ -343,6 +435,99 @@ public class ExcelReaderForGLM {
 		} // for centers
 	}
 
+	public void generateSVMInput() {
+		System.out.println("############## generateSVMInput ############");
+		int numOfLeftFeature = FeatureNum_Total - featureRemoveList.size();
+		List<Integer> survivedLassoFeatures = new ArrayList<Integer>();
+		String[] lineArray = DicccolUtilIO
+				.loadFileToArrayList("DistributedLassoResult.txt").get(0)
+				.split(",");
+		if (lineArray.length != numOfLeftFeature) {
+			System.out.println("lineArray.length!=numOfLeftFeature");
+			System.exit(0);
+		}
+		for (int f = 0; f < numOfLeftFeature; f++)
+			if (Math.abs(Double.valueOf(lineArray[f].trim())) > 1E-10)
+				survivedLassoFeatures.add(f);
+		System.out.println("SurvivedLassoFeatures ("
+				+ survivedLassoFeatures.size() + "): " + survivedLassoFeatures);
+
+		List<String> dataSvmList = new ArrayList<String>();
+		if (allLabelAfterScreen.size() != numOfSubTotalLeft) {
+			System.out.println("allLabelAfterScreen.size()!=numOfSubTotalLeft");
+			System.exit(0);
+		}
+		for (int s = 0; s < numOfSubTotalLeft; s++) {
+			String currentLine = "";
+			currentLine += (Double.valueOf(allLabelAfterScreen.get(s).trim()))
+					.intValue() + " ";
+			int featureLassoCount = 1;
+			for (int f = 0; f < numOfLeftFeature; f++) {
+				if (survivedLassoFeatures.contains(f)) {
+					// currentLine += featureLassoCount+":"+allResiduals[s][f] +
+					// " ";
+					currentLine += featureLassoCount + ":" + allY[s][f] + " ";
+					featureLassoCount++;
+				}// if this feature is survived from Lasso
+			} // for f
+			dataSvmList.add(currentLine);
+		} // for s
+		DicccolUtilIO.writeArrayListToFile(dataSvmList, "DataSvmList.txt");
+	}
+
+	public void generateWekaInput() {
+		System.out.println("############## generateWekaInput ############");
+		int numOfLeftFeature = FeatureNum_Total - featureRemoveList.size();
+		List<Integer> survivedLassoFeatures = new ArrayList<Integer>();
+		// String[] lineArray = DicccolUtilIO
+		// .loadFileToArrayList("DistributedLassoResult.txt").get(0)
+		// .split(",");
+		// if (lineArray.length != numOfLeftFeature) {
+		// System.out.println("lineArray.length!=numOfLeftFeature");
+		// System.exit(0);
+		// }
+		for (int f = 0; f < numOfLeftFeature; f++)
+			// if (Math.abs(Double.valueOf(lineArray[f].trim())) > 1E-10) //if
+			// want to use the lasso features
+			survivedLassoFeatures.add(f);
+		System.out.println("SurvivedLassoFeatures ("
+				+ survivedLassoFeatures.size() + "): " + survivedLassoFeatures);
+
+		List<String> dataWekaList = new ArrayList<String>();
+		if (allLabelAfterScreen.size() != numOfSubTotalLeft) {
+			System.out.println("allLabelAfterScreen.size()!=numOfSubTotalLeft");
+			System.exit(0);
+		}
+
+		dataWekaList.add("@RELATION  MDD");
+		dataWekaList.add(" ");
+//		for (int f = 0; f < survivedLassoFeatures.size(); f++)
+//			dataWekaList.add("@ATTRIBUTE "
+//					+ featureIDListAfterScreen[survivedLassoFeatures.get(f)]
+//					+ " REAL");
+		for (int f = 0; f < survivedTTestFeatures.size(); f++)
+			dataWekaList.add("@ATTRIBUTE "
+					+ featureIDListAfterScreen[survivedTTestFeatures.get(f)]
+					+ " REAL");
+		dataWekaList.add("@ATTRIBUTE class {0,1}");
+		dataWekaList.add(" ");
+		dataWekaList.add("@DATA");
+		for (int s = 0; s < numOfSubTotalLeft; s++) {
+			String currentLine = "";
+			for (int f = 0; f < numOfLeftFeature; f++)
+//				if (survivedLassoFeatures.contains(f))
+				if (survivedTTestFeatures.contains(f))
+//					currentLine += allResiduals[s][f] + ",";
+			 currentLine += allY[s][f] + ",";
+			currentLine += (Double.valueOf(allLabelAfterScreen.get(s).trim()))
+					.intValue();
+			dataWekaList.add(currentLine);
+		}
+
+		DicccolUtilIO.writeArrayListToFile(dataWekaList,
+				"DataWekaList_TTest_WithoutGLM.arff");
+	}
+
 	public static void main(String[] args) throws BiffException, IOException {
 		if (args.length != 1) {
 			System.out.println("Need input the directory of data...");
@@ -353,6 +538,8 @@ public class ExcelReaderForGLM {
 		mainHandler.loadingAllCenters();
 		mainHandler.screenData();
 		mainHandler.GlmFit();
+		// mainHandler.generateSVMInput();
+		mainHandler.generateWekaInput();
 
 		// /////////////////////
 		// mainHandler.test();

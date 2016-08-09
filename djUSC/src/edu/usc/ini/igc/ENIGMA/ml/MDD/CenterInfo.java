@@ -15,6 +15,7 @@ public class CenterInfo {
 	double[][] covariatesAfterScreen = null;
 	String[] labelAfterScreen = null;
 	double[][] dataAfterGLM = null;
+	List<String> distributedLassoInputData = null;
 	List<Integer> subRemoveList = new ArrayList<Integer>();
 
 
