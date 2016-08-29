@@ -76,7 +76,7 @@ public class WekaClassification {
 				for(double momentum = momentumMin;momentum<=momentumMax;momentum = momentum+momentumStep)
 					for(double learningRate = learningRateMin;learningRate<=learningRateMax;learningRate = learningRate+learningRateStep)
 					{
-						String paras = "Try MLP: (-L "+learningRate+" -M "+momentum+" -N "+trainingTime+" -H "+layer+")";
+						String paras = "*************** Try MLP: (-L "+learningRate+" -M "+momentum+" -N "+trainingTime+" -H "+layer+")";
 						System.out.println(paras);
 						
 						String currentResult = "";
@@ -94,7 +94,7 @@ public class WekaClassification {
 						System.out.println("TP:"+currentTP+"     TN:"+currentTN);
 						if(currentTP>bestTP && currentTN>bestTN)
 						{
-							System.out.println("Good! TP:"+currentTP+"     TN:"+currentTN);
+							System.out.println("Good!!!!!!!!!!   TP:"+currentTP+"     TN:"+currentTN);
 							bestTP = currentTP;
 							bestTN = currentTN;
 						}
