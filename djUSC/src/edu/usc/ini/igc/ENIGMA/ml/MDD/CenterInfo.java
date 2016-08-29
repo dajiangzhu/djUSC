@@ -15,16 +15,18 @@ public class CenterInfo {
 	double[][] covariatesAfterScreen = null;
 	String[] labelAfterScreen = null;
 	double[][] dataAfterGLM = null;
+	double[][] ICV = null;
 	List<String> distributedLassoInputData = null;
 	List<Integer> subRemoveList = new ArrayList<Integer>();
 
 
-	public CenterInfo(String centerName, int numOfSub,String[] oriSubIDList, String[][] oriData, double[][] oriCovariates ) {
+	public CenterInfo(String centerName, int numOfSub,String[] oriSubIDList, String[][] oriData, double[][] oriCovariates, double[][] ICV ) {
 		super();
 		this.centerName = centerName;
 		this.numOfSub = numOfSub;
 		this.oriSubIDList = oriSubIDList;
 		this.oriData = oriData;
 		this.oriCovariates = oriCovariates;
+		this.ICV = ICV;
 	}
 }
