@@ -101,7 +101,7 @@ public class WekaClassification {
 						currentResult += currentTP+" "+currentTN+" "+"-L "+learningRate+" -M "+momentum+" -N "+trainingTime+" -H "+layer;
 						outputList.add(currentResult);
 					} //for
-		DicccolUtilIO.writeArrayListToFile(outputList, "findBestPerformanceWeka.txt");
+		DicccolUtilIO.writeArrayListToFile(outputList, "findBestPerformanceWeka_layer_"+layer+".txt");
 	}
 
 	public static void main(String[] args) throws Exception {
