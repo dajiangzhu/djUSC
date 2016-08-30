@@ -45,7 +45,7 @@ public class WekaClassification {
 		}
 	}
 	
-	public void findBestPerformance(String filepath) throws Exception
+	public void findBestPerformance(String filepath, int layer) throws Exception
 	{
 		int layerMin = 2;
 		int layerMax = 6;
@@ -71,7 +71,7 @@ public class WekaClassification {
 
 
 		List<String> outputList = new ArrayList<String>();
-		for(int layer = layerMin;layer<=layerMax;layer = layer+layerStep)
+//		for(int layer = layerMin;layer<=layerMax;layer = layer+layerStep)
 			for(int trainingTime = trainingTimeMin;trainingTime<=trainingTimeMax;trainingTime = trainingTime+trainingTimeStep)
 				for(double momentum = momentumMin;momentum<=momentumMax;momentum = momentum+momentumStep)
 					for(double learningRate = learningRateMin;learningRate<=learningRateMax;learningRate = learningRate+learningRateStep)
@@ -105,8 +105,13 @@ public class WekaClassification {
 	}
 
 	public static void main(String[] args) throws Exception {
+		if(args.length!=1)
+		{
+			System.out.println("Need Layer...");
+			System.exit(0);
+		}
 		WekaClassification mainHandler = new WekaClassification();
-		mainHandler.findBestPerformance("DataWekaList_Lasso_ICV.arff");
+		mainHandler.findBestPerformance("DataWekaList_Lasso_ICV.arff", Integer.valueOf(args[0].trim()));
 
 	}
 
