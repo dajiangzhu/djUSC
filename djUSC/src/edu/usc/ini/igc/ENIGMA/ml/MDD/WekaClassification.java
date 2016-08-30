@@ -47,8 +47,8 @@ public class WekaClassification {
 	
 	public void findBestPerformance(String filepath) throws Exception
 	{
-		int layerMin = 1;
-		int layerMax = 8;
+		int layerMin = 2;
+		int layerMax = 6;
 		int layerStep = 1;
 		int trainingTimeMin = 200;
 		int trainingTimeMax = 1000;
