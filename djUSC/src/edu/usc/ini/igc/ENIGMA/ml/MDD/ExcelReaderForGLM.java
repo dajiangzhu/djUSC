@@ -330,12 +330,15 @@ public class ExcelReaderForGLM {
 
 		// Prepare the input data for distributed Lasso
 		List<String> distributedLassoInputDataAll = new ArrayList<String>();
+		List<String> distributedLassoInputDataAll_Part1 = new ArrayList<String>();
+		List<String> distributedLassoInputDataAll_Part2 = new ArrayList<String>();
 		List<String> distributedLassoInputDataAll_WithoutGLM = new ArrayList<String>();
 		for (int c = 0; c < CenterList.size(); c++) {
 			String[] lineArray = CenterList.get(c).trim().split("\\s+");
 			String currentCenterName = lineArray[0];
 			List<String> distributedLassoInputData = new ArrayList<String>();
 			List<String> distributedLassoInputData_WithoutGLM = new ArrayList<String>();
+			int numOfHalf = allCenter.get(currentCenterName).numOfLeftSub/2;
 			for (int s = 0; s < allCenter.get(currentCenterName).numOfLeftSub; s++) {
 				String currentSubData = "";
 				String currentSubData_WithoutGLM = "";
@@ -355,6 +358,10 @@ public class ExcelReaderForGLM {
 			} // for s
 			allCenter.get(currentCenterName).distributedLassoInputData = distributedLassoInputData;
 			distributedLassoInputDataAll.addAll(distributedLassoInputData);
+			for(int s=0;s<numOfHalf;s++)
+				distributedLassoInputDataAll_Part1.add(distributedLassoInputData.get(s));
+			for(int s=numOfHalf;s<allCenter.get(currentCenterName).numOfLeftSub;s++)
+				distributedLassoInputDataAll_Part2.add(distributedLassoInputData.get(s));
 			distributedLassoInputDataAll_WithoutGLM
 					.addAll(distributedLassoInputData_WithoutGLM);
 			DicccolUtilIO.writeArrayListToFile(distributedLassoInputData,
@@ -362,6 +369,10 @@ public class ExcelReaderForGLM {
 		} // for c
 		DicccolUtilIO.writeArrayListToFile(distributedLassoInputDataAll,
 				"distributedLassoInputDataAll_ICV.txt");
+		DicccolUtilIO.writeArrayListToFile(distributedLassoInputDataAll_Part1,
+				"distributedLassoInputDataAll_Part1_ICV.txt");
+		DicccolUtilIO.writeArrayListToFile(distributedLassoInputDataAll_Part2,
+				"distributedLassoInputDataAll_Part2_ICV.txt");
 		DicccolUtilIO.writeArrayListToFile(
 				distributedLassoInputDataAll_WithoutGLM,
 				"distributedLassoInputDataAll_WithoutGLM_ICV.txt");
@@ -597,8 +608,8 @@ public class ExcelReaderForGLM {
 		mainHandler.loadingAllCenters();
 		mainHandler.screenData();
 		mainHandler.GlmFit();
-		// mainHandler.generateSVMInput();
-		mainHandler.generateWekaInput();
+		// //mainHandler.generateSVMInput();
+		//mainHandler.generateWekaInput();
 
 		// /////////////////////
 		// mainHandler.test();
