@@ -5,12 +5,20 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uga.DICCCOL.DicccolUtil;
 import edu.uga.DICCCOL.DicccolUtilIO;
 import jxl.Sheet;
 import jxl.Workbook;
 import jxl.read.biff.BiffException;
 
 public class FormatMelbourneData {
+	
+	public void test()
+	{
+		
+		List<Integer> list = DicccolUtil.geneRandom(10, 20);
+		System.out.println(list);
+	}
 	
 	public void dealWithMelbourne() throws BiffException, IOException
 	{
@@ -84,7 +92,8 @@ public class FormatMelbourneData {
 
 	public static void main(String[] args) throws BiffException, IOException {
 		FormatMelbourneData mainHandler = new FormatMelbourneData();
-		mainHandler.dealWithMelbourne();
+//		mainHandler.dealWithMelbourne();
+		mainHandler.test();
 
 	}
 

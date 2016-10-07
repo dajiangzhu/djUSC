@@ -14,6 +14,7 @@ import jxl.read.biff.BiffException;
 
 import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
 
+import edu.uga.DICCCOL.DicccolUtil;
 import edu.uga.DICCCOL.DicccolUtilIO;
 import edu.uga.DICCCOL.stat.SimpleTTest;
 
@@ -339,6 +340,8 @@ public class ExcelReaderForGLM {
 			List<String> distributedLassoInputData = new ArrayList<String>();
 			List<String> distributedLassoInputData_WithoutGLM = new ArrayList<String>();
 			int numOfHalf = allCenter.get(currentCenterName).numOfLeftSub/2;
+			List<Integer> randomHalf = DicccolUtil.geneRandom(numOfHalf, allCenter.get(currentCenterName).numOfLeftSub);
+			DicccolUtilIO.writeIntegerListToFile(randomHalf, currentCenterName+"_RandomSubIDList.txt");
 			for (int s = 0; s < allCenter.get(currentCenterName).numOfLeftSub; s++) {
 				String currentSubData = "";
 				String currentSubData_WithoutGLM = "";
@@ -353,15 +356,15 @@ public class ExcelReaderForGLM {
 							.get(currentCenterName).dataAfterScreen[s][f] + " ";
 				}
 				distributedLassoInputData.add(currentSubData);
+				if(randomHalf.contains(s+1))
+					distributedLassoInputDataAll_Part1.add(currentSubData);
+				else
+					distributedLassoInputDataAll_Part2.add(currentSubData);
 				distributedLassoInputData_WithoutGLM
 						.add(currentSubData_WithoutGLM);
 			} // for s
 			allCenter.get(currentCenterName).distributedLassoInputData = distributedLassoInputData;
 			distributedLassoInputDataAll.addAll(distributedLassoInputData);
-			for(int s=0;s<numOfHalf;s++)
-				distributedLassoInputDataAll_Part1.add(distributedLassoInputData.get(s));
-			for(int s=numOfHalf;s<allCenter.get(currentCenterName).numOfLeftSub;s++)
-				distributedLassoInputDataAll_Part2.add(distributedLassoInputData.get(s));
 			distributedLassoInputDataAll_WithoutGLM
 					.addAll(distributedLassoInputData_WithoutGLM);
 			DicccolUtilIO.writeArrayListToFile(distributedLassoInputData,
@@ -550,7 +553,7 @@ public class ExcelReaderForGLM {
 		int numOfLeftFeature = FeatureNum_Total - featureRemoveList.size();
 		List<Integer> survivedLassoFeatures = new ArrayList<Integer>();
 		String[] lineArray = DicccolUtilIO
-				.loadFileToArrayList("SelectedFeatureFromLassoFrequencyAll_ICV.txt")
+				.loadFileToArrayList("SelectedFeatureFromLassoFrequency_AND_ICV.txt")
 				.get(0).split(",");
 		if (lineArray.length != numOfLeftFeature) {
 			System.out.println("lineArray.length!=numOfLeftFeature");
@@ -595,7 +598,7 @@ public class ExcelReaderForGLM {
 		}
 
 		DicccolUtilIO.writeArrayListToFile(dataWekaList,
-				"DataWekaList_Lasso_ICV.arff");
+				"DataWekaList_Lasso_AND_ICV.arff");
 	}
 
 	public static void main(String[] args) throws BiffException, IOException {
@@ -609,7 +612,7 @@ public class ExcelReaderForGLM {
 		mainHandler.screenData();
 		mainHandler.GlmFit();
 		// //mainHandler.generateSVMInput();
-		//mainHandler.generateWekaInput();
+		mainHandler.generateWekaInput();
 
 		// /////////////////////
 		// mainHandler.test();
