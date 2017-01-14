@@ -6,7 +6,7 @@ import java.util.List;
 import edu.uga.DICCCOL.DicccolUtilIO;
 
 public class AnaLassoResult {
-
+//hahaha
 	public void anaTwoParts() {
 		int featureNum = 68;
 		double frequencyThreshold = 1000.0;
