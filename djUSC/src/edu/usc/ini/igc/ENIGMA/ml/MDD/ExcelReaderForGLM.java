@@ -560,7 +560,7 @@ public class ExcelReaderForGLM {
 			System.exit(0);
 		}
 		for (int f = 0; f < numOfLeftFeature; f++)
-			if (Math.abs(Double.valueOf(lineArray[f].trim())) > 1E-10) // if
+//			if (Math.abs(Double.valueOf(lineArray[f].trim())) > 1E-10) // if
 				// want to use the lasso features
 				survivedLassoFeatures.add(f);
 		System.out.println("SurvivedLassoFeatures ("
@@ -598,7 +598,7 @@ public class ExcelReaderForGLM {
 		}
 
 		DicccolUtilIO.writeArrayListToFile(dataWekaList,
-				"DataWekaList_Lasso_AND_ICV.arff");
+				"DataWekaList_Lasso_AllFeature_ICV.arff");
 	}
 
 	public static void main(String[] args) throws BiffException, IOException {
@@ -612,7 +612,7 @@ public class ExcelReaderForGLM {
 		mainHandler.screenData();
 		mainHandler.GlmFit();
 		// //mainHandler.generateSVMInput();
-		mainHandler.generateWekaInput();
+//		mainHandler.generateWekaInput();
 
 		// /////////////////////
 		// mainHandler.test();

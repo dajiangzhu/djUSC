@@ -51,15 +51,15 @@ public class WekaClassification {
 		int layerMin = 2;
 		int layerMax = 6;
 		int layerStep = 1;
-		int trainingTimeMin = 200;
-		int trainingTimeMax = 1000;
+		int trainingTimeMin = 300;
+		int trainingTimeMax = 700;
 		int trainingTimeStep = 50;
 		double momentumMin = 0.05;
 		double momentumMax = 0.5;
 		double momentumStep = 0.05;
 		double learningRateMin = 0.01;
 		double learningRateMax = 0.5;
-		double learningRateStep = 0.005;
+		double learningRateStep = 0.01;
 
 		
 		FileReader trainreader = new FileReader(filepath);
@@ -67,8 +67,8 @@ public class WekaClassification {
 		train.setClassIndex(train.numAttributes() - 1);
 		MultilayerPerceptron mlp = new MultilayerPerceptron();
 		
-		double bestTP = 100.0;
-		double bestTN = 500.0;
+		double bestTP = 350.0;
+		double bestTN = 350.0;
 
 
 		List<String> outputList = new ArrayList<String>();
@@ -102,17 +102,17 @@ public class WekaClassification {
 						currentResult += currentTP+" "+currentTN+" "+"-L "+learningRate+" -M "+momentum+" -N "+trainingTime+" -H "+layer;
 						outputList.add(currentResult);
 					} //for
-		DicccolUtilIO.writeArrayListToFile(outputList, "findBestPerformanceWeka_layer_"+layer+".txt");
+		DicccolUtilIO.writeArrayListToFile(outputList, filepath+"_layer_"+layer+".txt");
 	}
 
 	public static void main(String[] args) throws Exception {
-		if(args.length!=1)
+		if(args.length!=2)
 		{
-			System.out.println("Need Layer...");
+			System.out.println("Need arff and Layer...");
 			System.exit(0);
 		}
 		WekaClassification mainHandler = new WekaClassification();
-		mainHandler.findBestPerformance("DataWekaList_Lasso_ICV.arff", Integer.valueOf(args[0].trim()));
+		mainHandler.findBestPerformance(args[0].trim(), Integer.valueOf(args[1].trim()));
 
 	}
 
