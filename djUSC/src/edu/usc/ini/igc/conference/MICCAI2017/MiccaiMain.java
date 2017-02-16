@@ -9,7 +9,8 @@ import edu.uga.DICCCOL.SVM.SVM_Classifier;
 
 public class MiccaiMain {
 
-	public String homeDataDir = "E:\\GITWorkSpace\\djUSC\\2017MICCAI\\";
+//	public String homeDataDir = "E:\\GITWorkSpace\\djUSC\\2017MICCAI\\";
+	public String homeDataDir = "";
 	public int feaNumWant = 40;
 	public int maxRound = 10;
 	public float shinkRate = 0.1f;
@@ -39,7 +40,7 @@ public class MiccaiMain {
 			currentSiteProfile.lassoInputFile = currentLassoInputFile;
 			// create LassoFitGenerator
 			List<String> currentLassoInputData = DicccolUtilIO
-					.loadFileToArrayList(currentLassoInputFile);
+					.loadFileToArrayList(homeDataDir+currentLassoInputFile);
 			String[] firstLineFeatures = currentLassoInputData.get(0)
 					.split(",")[1].split("\\s+");
 			int subCount = currentLassoInputData.size();
@@ -200,10 +201,11 @@ public class MiccaiMain {
 				.println("##################### updateImprovmentStatus finished! #####################");
 	}
 
-	public void do_optimization() throws Exception {
+	public void do_optimization(String SiteInfoFile, String FeatureInforFile) throws Exception {
 		System.out
-				.println("##################### do_optimization... #####################");
-		this.init("SiteList.txt", "FeatureList_Imputed_Over21.txt");
+				.println("##################### do_optimization...FeaNumWant("+this.feaNumWant+")  ShrinkRate("+this.shinkRate+") #####################");
+//		this.init("SiteList.txt", "FeatureList_Imputed_Over21.txt");
+		this.init(SiteInfoFile, FeatureInforFile);
 		this.loadLassoInput();
 
 		int roundCount = 0;
@@ -228,8 +230,16 @@ public class MiccaiMain {
 	}
 
 	public static void main(String[] args) throws Exception {
+		if(args.length!=5)
+		{
+			System.out.println("Need homedir sitelist featurelist feaNumWant(20-50) shrinkRate(0.01-0.5)");
+			System.exit(0);
+		}
 		MiccaiMain mainHandler = new MiccaiMain();
-		mainHandler.do_optimization();
+		mainHandler.homeDataDir = args[0].trim();
+		mainHandler.feaNumWant = Integer.valueOf(args[3].trim());
+		mainHandler.shinkRate = Float.valueOf(args[4].trim());
+		mainHandler.do_optimization(args[1].trim(), args[2].trim());
 	}
 
 }
