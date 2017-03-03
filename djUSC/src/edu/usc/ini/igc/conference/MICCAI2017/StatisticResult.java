@@ -3,6 +3,8 @@ package edu.usc.ini.igc.conference.MICCAI2017;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uga.DICCCOL.DicccolUtilIO;
+
 public class StatisticResult {
 	int maxRoundIndex = 10;
 
@@ -62,6 +64,11 @@ public class StatisticResult {
 	}
 
 	public void printStatisticResult() {
+		
+		List<String> outPutList = new ArrayList<String>();
+		String outPutFilePre = "Statistics_";
+		String currentOutPutLine = "";
+		
 		System.out
 				.println("*******************************PRINT STATISTIC RESULT INFO************************************************");
 		System.out.println("######################################There are "
@@ -73,40 +80,57 @@ public class StatisticResult {
 
 		System.out
 				.println("######################################accuracyImprovment:");
+		outPutList.clear();
 		for (int s = 0; s < this.siteNum; s++) {
 			System.out.println("----------------- Site-" + s + ":");
 			System.out
 					.println(accuracyImprovment[s][0] + " "
 							+ accuracyImprovment[s][1] + " "
 							+ accuracyImprovment[s][2]);
+			outPutList.add( accuracyImprovment[s][0] + " "
+					+ accuracyImprovment[s][1] + " "
+					+ accuracyImprovment[s][2] );
 		}
+		DicccolUtilIO.writeArrayListToFile(outPutList, outPutFilePre+"Fig2_accuracyImprovment.txt");
 
 		System.out
 				.println("######################################optimizationProfile:");
-
 		for (int s = 0; s < this.siteNum; s++) {
 			System.out.println("-------Site-" + s + ":");
+			outPutList.clear();
 			for (int r = 0; r < this.roundNum; r++) {
-				System.out.println("----------------- Round: " + r + ":");
+//				System.out.println("----------------- Round: " + r + ":");
 				System.out.println(optimizationProfile[r][s][0] + " "
 						+ optimizationProfile[r][s][1] + " "
 						+ optimizationProfile[r][s][2]);
-			}
-		}
+				outPutList.add( optimizationProfile[r][s][0] + " "
+						+ optimizationProfile[r][s][1] + " "
+						+ optimizationProfile[r][s][2] );
+			} //for r
+			DicccolUtilIO.writeArrayListToFile(outPutList, outPutFilePre+"Fig2_optimizationProfile_site_"+s+".txt");
+		} //for s
 
 		System.out
-				.println("######################################optimizationProfile:");
+				.println("######################################feaDistribution:");
+		outPutList.clear();
 		for (int f = 0; f < this.feaNum; f++) {
 			String tmpStr = "";
 			for (int r = 0; r < this.roundNum; r++)
 				tmpStr += feaDistribution[f][r] + " ";
 			System.out.println("Feature " + (f + 1) + ": " + tmpStr);
-		}
+			outPutList.add(tmpStr);
+		} //for f
+		DicccolUtilIO.writeArrayListToFile(outPutList, outPutFilePre+"Fig3_feaDistribution.txt");
 		
 		System.out
 		.println("######################################numOfSelectedFeatures:");
+		outPutList.clear();
 		for (int r = 0; r < this.roundNum; r++)
+		{
 			System.out.println(numOfSelectedFeatures[r]);
+			outPutList.add(numOfSelectedFeatures[r]+"");
+		} //for r
+		DicccolUtilIO.writeArrayListToFile(outPutList, outPutFilePre+"Fig3_numOfSelectedFeatures.txt");
 		
 		System.out
 		.println("######################################avgFeaWeight:");
