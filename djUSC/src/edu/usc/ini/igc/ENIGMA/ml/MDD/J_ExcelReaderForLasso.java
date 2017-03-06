@@ -117,13 +117,15 @@ public class J_ExcelReaderForLasso {
 				+ " finished!");
 	}
 
-	public void prepareForLasso(String siteConfig) {
+	public void prepareForLasso(String siteConfig, String category, String excelFile) {
 		System.out.println("#####################prepareForLasso...");
 
+		String filePre = excelFile.split("_")[0].trim();
+		String outPutDir = homeDataDir + "LassoInput\\"+category+"\\";
 		List<String> siteConfigList = DicccolUtilIO
 				.loadFileToArrayList(siteConfig);
 		for (String line : siteConfigList) {
-			String fileName = "J_LassoInput_";
+			String fileName = "J_LassoInput_"+filePre+"_";
 			List<String> distributedLassoInput = new ArrayList<String>();
 			String[] lineArray = line.split(";");
 			for (int i = 0; i < lineArray.length; i++) {
@@ -146,9 +148,11 @@ public class J_ExcelReaderForLasso {
 						distributedLassoInput.add(currentLine);
 					} // for
 			} // for i
-			DicccolUtilIO.writeArrayListToFile(distributedLassoInput, fileName
+			DicccolUtilIO.writeArrayListToFile(distributedLassoInput, outPutDir+fileName
 					+ ".txt");
 		} // for line
+		DicccolUtilIO.writeArrayListToFile(featureList, outPutDir+"FeatureList_"+filePre
+				+ ".txt");
 
 		System.out.println("#####################prepareForLasso finished!");
 	}
@@ -273,14 +277,14 @@ public class J_ExcelReaderForLasso {
 	public static void main(String[] args) throws BiffException, IOException {
 		if (args.length == 2) {
 			String category = args[0].trim();
-			String fileName = args[1].trim();
+			String excelfileName = args[1].trim();
 
 			J_ExcelReaderForLasso mainHandler = new J_ExcelReaderForLasso();
-			mainHandler.readExcel(category, fileName);
-			mainHandler.printDataInfo(category, fileName);
-//			mainHandler
-//					.prepareForLasso("J_PrepareLassoInput_Site_Imputed_Over21_20.txt");
-			 mainHandler.prepareForWeka("J_PrepareLassoInput_Site_Imputed_Over21_20.txt");
+			mainHandler.readExcel(category, excelfileName);
+			mainHandler.printDataInfo(category, excelfileName);
+			mainHandler
+					.prepareForLasso("J_PrepareLassoInput_Site_Complete_Over21_20.txt",category, excelfileName);
+//			 mainHandler.prepareForWeka("J_PrepareLassoInput_Site_Imputed_Over21_20.txt");
 
 		} else
 			System.out
