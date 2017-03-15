@@ -52,80 +52,96 @@ public class J_LassoFit {
 	}
 
 	public void runLasso(int feaNumWant) {
-		System.out
-				.println("##################### runLasso... ");
+		System.out.println("##################### runLasso... ");
 		float[] penalityW = new float[this.featuresNum];
 		for (int f = 0; f < this.featuresNum; f++)
 			penalityW[f] = 1.0f;
 
 		lassoFit = this.lassoFitGenerator.fit(feaNumWant, penalityW);
-		System.out
-				.println("##################### runLasso finished! ");
+		System.out.println("##################### runLasso finished! ");
 	}
-	
-	public void generateSVMInput(String dir, String lassoInputFile) {
+
+	public void generateSVMInput(String dir, String lassoInputFile,
+			int feaNumWant) {
 		System.out
 				.println("##################### generateSVMInput... #####################");
-			System.out.println("Generating SVM Input (weka) for: "
-					+ lassoInputFile);
-			String filePre = lassoInputFile.split("_")[2].trim();
-			List<String> FeatureList = DicccolUtilIO.loadFileToArrayList(dir+"FeatureList_"+filePre+".txt");
-			List<String> dataWekaList = new ArrayList<String>();
-			List<Integer> selectedFeatureList = lassoFit
-					.getSelectedFeatureList();
-			System.out.println("Selected features:");
-			System.out.println(selectedFeatureList);
-			dataWekaList.add("@RELATION  MDD");
-			dataWekaList.add(" ");
-			for (int f = 0; f < selectedFeatureList.size(); f++)
-				dataWekaList
-						.add("@ATTRIBUTE "
-								+ FeatureList.get(selectedFeatureList.get(f))
-								+ " REAL");
-			dataWekaList.add("@ATTRIBUTE class {0,1}");
-			dataWekaList.add(" ");
-			dataWekaList.add("@DATA");
-			for (int s = 0; s < this.subNum; s++) {
-				String currentLine = "";
-				for (int selectedFeaIndex : selectedFeatureList)
-					currentLine += this.OriObservations[selectedFeaIndex][s]
-							+ ",";
-				currentLine += this.labelList.get(s);
-				dataWekaList.add(currentLine);
-			} // for s
-			DicccolUtilIO.writeArrayListToFile(dataWekaList, dir
-					+ lassoInputFile.substring(0, lassoInputFile.length()-4) + ".arff");
+		System.out
+				.println("Generating SVM Input (weka) for: " + lassoInputFile);
+		String filePre = lassoInputFile.split("_")[2].trim();
+		List<String> FeatureList = DicccolUtilIO.loadFileToArrayList(dir
+				+ "FeatureList_" + filePre + ".txt");
+		List<String> dataWekaList = new ArrayList<String>();
+		List<Integer> selectedFeatureList = lassoFit.getSelectedFeatureList();
+		System.out.println("Selected features:");
+		System.out.println(selectedFeatureList);
+		dataWekaList.add("@RELATION  MDD");
+		dataWekaList.add(" ");
+		for (int f = 0; f < selectedFeatureList.size(); f++)
+			dataWekaList.add("@ATTRIBUTE "
+					+ FeatureList.get(selectedFeatureList.get(f)) + " REAL");
+		dataWekaList.add("@ATTRIBUTE class {0,1}");
+		dataWekaList.add(" ");
+		dataWekaList.add("@DATA");
+		for (int s = 0; s < this.subNum; s++) {
+			String currentLine = "";
+			for (int selectedFeaIndex : selectedFeatureList)
+				currentLine += this.OriObservations[selectedFeaIndex][s] + ",";
+			currentLine += this.labelList.get(s);
+			dataWekaList.add(currentLine);
+		} // for s
+		DicccolUtilIO.writeArrayListToFile(dataWekaList,
+				dir + lassoInputFile.substring(0, lassoInputFile.length() - 4)
+						+ "_Feature" + feaNumWant + ".arff");
 		System.out
 				.println("##################### generateSVMInput finished! #####################");
 	}
 
 	public static void main(String[] args) throws Exception {
-//		if (args.length != 3) {
-//			System.out
-//					.println("Need: Dir(String) LassoInputFile(String) featuresWant(int)");
-//			System.exit(0);
-//		}
-//		String dir = args[0].trim();
-//		String lassoInputFile = args[1].trim();
-//
-//		File f = new File(dir + lassoInputFile);
-//		if (!f.exists() || f.isDirectory()) {
-//			System.out.println("Shit! " + dir + lassoInputFile
-//					+ " does not exist or it is a directory!");
-//			System.exit(0);
-//		}
-//		int feaNumWant = Integer.valueOf(args[2].trim());
-		
-		/////////////////////
-		String dir = "E:\\data\\Machine_Learning_MDD\\Journal\\FromBrandy\\LassoInput\\Complete\\";
-		String lassoInputFile = "J_LassoInput_Over21_S.txt";
-		int feaNumWant = 25;
-		//////////////////////
+		// if (args.length != 3) {
+		// System.out
+		// .println("Need: Dir(String) LassoInputFile(String) featuresWant(int)");
+		// System.exit(0);
+		// }
+		// String dir = args[0].trim();
+		// String lassoInputFile = args[1].trim();
+		//
+		// File f = new File(dir + lassoInputFile);
+		// if (!f.exists() || f.isDirectory()) {
+		// System.out.println("Shit! " + dir + lassoInputFile
+		// + " does not exist or it is a directory!");
+		// System.exit(0);
+		// }
+		// int feaNumWant = Integer.valueOf(args[2].trim());
 
+		// ///////////////////
+		J_SiteDictionary siteDic = new J_SiteDictionary();
 		J_LassoFit mainHandler = new J_LassoFit();
-		mainHandler.loadLassoInput(dir, lassoInputFile);
-		mainHandler.runLasso(feaNumWant);
-		mainHandler.generateSVMInput(dir, lassoInputFile);
+		String subGroupName = "MF";
+		String dir = "E:\\data\\Machine_Learning_MDD\\Journal\\FromBrandy\\LassoInput\\Complete\\"
+				+ subGroupName + "\\";
+		int feaNumWant = 25;
+
+		// ////////////////////
+		// mainHandler.loadLassoInput(dir, lassoInputFile);
+		// mainHandler.runLasso(feaNumWant);
+		// mainHandler.generateSVMInput(dir, lassoInputFile, feaNumWant);
+		// //////////////////////
+		String siteConfig = "MF_Combine_Single_SiteSequence_0.07.txt";
+		List<String> siteConfigList = DicccolUtilIO
+				.loadFileToArrayList(siteConfig);
+		for (String line : siteConfigList) {
+			String fileName = "J_LassoInput_" + subGroupName + "_";
+			List<String> distributedLassoInput = new ArrayList<String>();
+			String[] lineArray = line.split("\\s+")[0].split(";");
+			for (int i = 0; i < lineArray.length; i++) {
+				String siteName = lineArray[i].trim();
+				fileName += siteDic.getCodeFromSite(siteName);
+			} // for i
+			fileName += ".txt";
+			mainHandler.loadLassoInput(dir, fileName);
+			mainHandler.runLasso(feaNumWant);
+			mainHandler.generateSVMInput(dir, fileName, feaNumWant);
+		} // for line
 
 	}
 

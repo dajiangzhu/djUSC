@@ -10,7 +10,7 @@ import weka.classifiers.functions.supportVector.RBFKernel;
 import weka.core.Instances;
 
 
-public class J_Classification {
+public class Back_J_Classification {
 	
 	public void simpleWekaTrain(String filepath) {
 		try {
@@ -110,7 +110,7 @@ public class J_Classification {
 		if(args.length==3)
 		{
 
-			J_Classification mainHandler = new J_Classification();
+			Back_J_Classification mainHandler = new Back_J_Classification();
 			mainHandler.Classification_SMO(args[0].trim(), args[1].trim(), args[2].trim());
 		}
 		else

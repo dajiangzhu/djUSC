@@ -6,7 +6,7 @@ import java.util.List;
 
 import edu.uga.DICCCOL.DicccolUtilIO;
 
-public class J_AnaClassificationResult {
+public class Back_J_AnaClassificationResult {
 	
 	J_SiteDictionary siteDic = new J_SiteDictionary();
 	public String homeDataDir = "E:\\data\\Machine_Learning_MDD\\Journal\\FromBrandy\\";
@@ -75,7 +75,7 @@ public class J_AnaClassificationResult {
 	}
 
 	public static void main(String[] args) {
-		J_AnaClassificationResult mainHandler = new J_AnaClassificationResult();
+		Back_J_AnaClassificationResult mainHandler = new Back_J_AnaClassificationResult();
 		mainHandler.AnaSMOResult("J_PrepareLassoInput_Site_Imputed_Over21_20.txt");
 
 	}
