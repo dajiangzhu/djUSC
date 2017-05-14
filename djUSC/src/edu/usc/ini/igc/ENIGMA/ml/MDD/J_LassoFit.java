@@ -32,6 +32,7 @@ public class J_LassoFit {
 		OriObservations = new float[featuresNum][subNum];
 
 		lassoFitGenerator.init(featuresNum, subNum);
+		this.labelList.clear();
 		for (int s = 0; s < subNum; s++) {
 			String line = currentLassoInputData.get(s);
 			String[] lineString = line.split(",");
@@ -116,32 +117,75 @@ public class J_LassoFit {
 		// ///////////////////
 		J_SiteDictionary siteDic = new J_SiteDictionary();
 		J_LassoFit mainHandler = new J_LassoFit();
-		String subGroupName = "MF";
-		String dir = "E:\\data\\Machine_Learning_MDD\\Journal\\FromBrandy\\LassoInput\\Complete\\"
-				+ subGroupName + "\\";
+		String subGroupName = "Females";
+		String category = "Complete";
+		String dir = "E:\\data\\Machine_Learning_MDD\\Journal\\FromBrandy\\LassoInput\\"
+				+ category + "\\" + subGroupName + "\\";
 		int feaNumWant = 25;
 
-		// ////////////////////
+		// //////////////////// for single lasso input
+		// String lassoInputFile = "J_LassoInput_"+subGroupName+"_G.txt";
 		// mainHandler.loadLassoInput(dir, lassoInputFile);
 		// mainHandler.runLasso(feaNumWant);
 		// mainHandler.generateSVMInput(dir, lassoInputFile, feaNumWant);
 		// //////////////////////
-		String siteConfig = "MF_Combine_Single_SiteSequence_0.07.txt";
-		List<String> siteConfigList = DicccolUtilIO
-				.loadFileToArrayList(siteConfig);
-		for (String line : siteConfigList) {
-			String fileName = "J_LassoInput_" + subGroupName + "_";
-			List<String> distributedLassoInput = new ArrayList<String>();
-			String[] lineArray = line.split("\\s+")[0].split(";");
-			for (int i = 0; i < lineArray.length; i++) {
-				String siteName = lineArray[i].trim();
-				fileName += siteDic.getCodeFromSite(siteName);
-			} // for i
-			fileName += ".txt";
-			mainHandler.loadLassoInput(dir, fileName);
-			mainHandler.runLasso(feaNumWant);
-			mainHandler.generateSVMInput(dir, fileName, feaNumWant);
-		} // for line
+
+		// ////////////////// for single lasso input
+		// for(int i=0;i<100;i++)
+		// {
+		// String lassoInputFile =
+		// "J_LassoInput_"+subGroupName+"_Random"+i+".txt";
+		// mainHandler.loadLassoInput(dir, lassoInputFile);
+		// mainHandler.runLasso(feaNumWant);
+		// mainHandler.generateSVMInput(dir, lassoInputFile, feaNumWant);
+		//
+		// }
+
+		// ////////////////////
+
+		// // ////////////////////// for sequence
+		 String siteConfig =
+				 subGroupName+"_Over21_"+category+"_SiteSequence.txt";
+		 List<String> siteConfigList = DicccolUtilIO
+		 .loadFileToArrayList(siteConfig);
+		 List<String> qsubLines = new ArrayList<String>();
+		 for (String line : siteConfigList) {
+		 String fileName = "J_LassoInput_" + subGroupName + "_";
+		 List<String> distributedLassoInput = new ArrayList<String>();
+		 String[] lineArray = line.split("\\s+")[0].split(";");
+		 String qsubSiteCode = "";
+		 for (int i = 0; i < lineArray.length; i++) {
+		 String siteName = lineArray[i].trim();
+		 String siteCode = siteDic.getCodeFromSite(siteName);
+		 qsubSiteCode += siteCode;
+		 fileName += siteCode;
+		 } // for i
+		 qsubLines.add(qsubSiteCode);
+		 fileName += ".txt";
+		 mainHandler.loadLassoInput(dir, fileName);
+		 mainHandler.runLasso(feaNumWant);
+		 mainHandler.generateSVMInput(dir, fileName, feaNumWant);
+		 } // for line
+
+		// ////////////////////// for seperate site
+//		File folder = new File(dir);
+//		String[] files = folder.list();
+//		for (String fileName : files) {
+//			if (fileName.startsWith("J_LassoInput") && fileName.endsWith(".txt")) {
+//				mainHandler.loadLassoInput(dir, fileName);
+//				mainHandler.runLasso(feaNumWant);
+//				mainHandler.generateSVMInput(dir, fileName, feaNumWant);
+//			}
+//		} // for line
+
+		 System.out
+		 .println("##########################  qsub script ##################################");
+		 for (String siteCode : qsubLines)
+		 System.out.println("/ifshome/dzhu/ENGIMA_MDD/Journal/SVMInput/"
+		 + category
+		 + "/singlesite_SVM_qsub.sh ${category} ${subGroup} ${feaNum} "
+		 + siteCode);
+		 //////////////////////
 
 	}
 

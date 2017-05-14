@@ -19,12 +19,12 @@ import jxl.read.biff.BiffException;
 public class J_ExcelReaderForLasso {
 
 	J_SiteDictionary siteDic = new J_SiteDictionary();
-	
+
 	public int numG0Total = 0;
 	public int numG1Total = 0;
 
 	public String homeDataDir = "E:\\data\\Machine_Learning_MDD\\Journal\\FromBrandy\\";
-	int subNumThre = 19;
+	int subNumThre = 9;
 	public double lassoFrequencyThre = 100.0;
 
 	public int feaNum = 0;
@@ -72,11 +72,16 @@ public class J_ExcelReaderForLasso {
 		Sheet sheet_Current = w_Current.getSheet(sheetName);
 
 		// find how many features
-		feaNum = sheet_Current.getColumns() - 3;
+		int headNum = 3;
+		feaNum = sheet_Current.getColumns() - headNum; // 3 for complete,
+														// because
+														// Brandy put sex on
+														// imputed
+														// data
 		// read feature list
 		for (int col = 0; col < feaNum; col++)
-			featureList.add(sheet_Current.getCell(col + 3, 0).getContents()
-					.trim());
+			featureList.add(sheet_Current.getCell(col + headNum, 0)
+					.getContents().trim());
 
 		// find how many subjects and sites
 		subNum = sheet_Current.getRows() - 1;
@@ -101,7 +106,16 @@ public class J_ExcelReaderForLasso {
 			double[] currentFeatures = new double[feaNum];
 			for (int col = 0; col < feaNum; col++) {
 				double currentFeature = Double.valueOf(sheet_Current
-						.getCell(col + 3, row).getContents().trim());
+						.getCell(col + headNum, row).getContents().trim()); // 3
+																			// for
+				// complete,
+				// because
+				// Brandy
+				// put
+				// sex
+				// on
+				// imputed
+				// data
 				if (currentFeature > featureMax[col])
 					featureMax[col] = currentFeature;
 				if (currentFeature < featureMin[col])
@@ -127,7 +141,8 @@ public class J_ExcelReaderForLasso {
 		System.out.println("#####################prepareForLasso...");
 
 		String filePre = excelFile.split("_")[0].trim();
-		String outPutDir = homeDataDir + "LassoInput\\" + category + "\\"+filePre+"\\";
+		String outPutDir = homeDataDir + "LassoInput\\" + category + "\\"
+				+ filePre + "\\";
 		List<String> siteConfigList = DicccolUtilIO
 				.loadFileToArrayList(siteConfig);
 		for (String line : siteConfigList) {
@@ -159,8 +174,150 @@ public class J_ExcelReaderForLasso {
 		} // for line
 		DicccolUtilIO.writeArrayListToFile(featureList, outPutDir
 				+ "FeatureList_" + filePre + ".txt");
-
 		System.out.println("#####################prepareForLasso finished!");
+	}
+
+	public void prepareForLassoAll(String category, String excelFile) {
+		System.out.println("#####################prepareForLasso...");
+
+		String filePre = excelFile.split("_")[0].trim();
+		String outPutDir = homeDataDir + "LassoInput\\" + category + "\\"
+				+ filePre + "\\";
+		List<double[]> dataG0All = new ArrayList<double[]>();
+		List<double[]> dataG1All = new ArrayList<double[]>();
+		for (String siteName : siteSet) {
+			System.out.println("-------------" + siteName);
+			List<double[]> dataG0 = siteMap_G0.get(siteName);
+			if (dataG0 != null)
+				dataG0All.addAll(dataG0);
+			List<double[]> dataG1 = siteMap_G1.get(siteName);
+			if (dataG1 != null)
+				dataG1All.addAll(dataG1);
+		}
+		System.out.println("G0: " + dataG0All.size());
+		System.out.println("G1: " + dataG1All.size());
+
+		List<double[]> dataLess;
+		List<double[]> dataMore;
+		String labelLess = "";
+		String labelMore = "";
+		int equalNum = 0;
+		if (dataG0All.size() < dataG1All.size()) {
+			dataLess = dataG0All;
+			dataMore = dataG1All;
+			labelLess = "0.0,";
+			labelMore = "1.0,";
+			equalNum = dataG0All.size();
+		} else {
+			dataLess = dataG1All;
+			dataMore = dataG0All;
+			labelLess = "1.0,";
+			labelMore = "0.0,";
+			equalNum = dataG1All.size();
+		}
+
+		int repeatNum = 100;
+		for (int i = 0; i < repeatNum; i++) {
+			List<String> distributedLassoInput = new ArrayList<String>();
+			for (double[] currentdata : dataLess) {
+				String currentLine = labelLess;
+				for (int f = 0; f < feaNum; f++)
+					currentLine = currentLine + currentdata[f] + " ";
+				distributedLassoInput.add(currentLine);
+			}
+
+			List<Integer> listMore = DicccolUtil.geneRandom(equalNum,
+					dataMore.size());
+			for (int moreIndex : listMore) {
+				double[] currentdata = dataMore.get(moreIndex - 1);
+				String currentLine = labelMore;
+				for (int f = 0; f < feaNum; f++)
+					currentLine = currentLine + currentdata[f] + " ";
+				distributedLassoInput.add(currentLine);
+			} // for moreIndex
+			DicccolUtilIO.writeArrayListToFile(distributedLassoInput, outPutDir
+					+ "J_LassoInput_" + filePre + "_Random" + i + ".txt");
+		} // for repeatNum
+
+		DicccolUtilIO.writeArrayListToFile(featureList, outPutDir
+				+ "FeatureList_" + filePre + ".txt");
+		System.out.println("#####################prepareForLassoAll finished!");
+	}
+
+	public void prepareForLassoSeparateSite(String category, String excelFile) {
+		System.out.println("#####################prepareForLasso...");
+
+		String filePre = excelFile.split("_")[0].trim();
+		String outPutDir = homeDataDir + "LassoInput\\" + category + "\\"
+				+ filePre + "\\individualsite\\";
+		List<double[]> dataG0All = new ArrayList<double[]>();
+		List<double[]> dataG1All = new ArrayList<double[]>();
+		for (String siteName : siteSet) {
+			dataG0All.clear();
+			dataG1All.clear();
+			System.out.println("-------------" + siteName);
+			List<double[]> dataG0 = siteMap_G0.get(siteName);
+			List<double[]> dataG1 = siteMap_G1.get(siteName);
+
+			if (dataG0 != null && dataG1 != null)
+				if (dataG0.size() > subNumThre && dataG1.size() > subNumThre) {
+					dataG0All.addAll(dataG0);
+					dataG1All.addAll(dataG1);
+
+					System.out.println("G0: " + dataG0All.size());
+					System.out.println("G1: " + dataG1All.size());
+
+					List<double[]> dataLess;
+					List<double[]> dataMore;
+					String labelLess = "";
+					String labelMore = "";
+					int equalNum = 0;
+					if (dataG0All.size() < dataG1All.size()) {
+						dataLess = dataG0All;
+						dataMore = dataG1All;
+						labelLess = "0.0,";
+						labelMore = "1.0,";
+						equalNum = dataG0All.size();
+					} else {
+						dataLess = dataG1All;
+						dataMore = dataG0All;
+						labelLess = "1.0,";
+						labelMore = "0.0,";
+						equalNum = dataG1All.size();
+					}
+
+					int repeatNum = 10;
+					for (int i = 0; i < repeatNum; i++) {
+						List<String> distributedLassoInput = new ArrayList<String>();
+						for (double[] currentdata : dataLess) {
+							String currentLine = labelLess;
+							for (int f = 0; f < feaNum; f++)
+								currentLine = currentLine + currentdata[f]
+										+ " ";
+							distributedLassoInput.add(currentLine);
+						}
+
+						List<Integer> listMore = DicccolUtil.geneRandom(
+								equalNum, dataMore.size());
+						for (int moreIndex : listMore) {
+							double[] currentdata = dataMore.get(moreIndex - 1);
+							String currentLine = labelMore;
+							for (int f = 0; f < feaNum; f++)
+								currentLine = currentLine + currentdata[f]
+										+ " ";
+							distributedLassoInput.add(currentLine);
+						} // for moreIndex
+						DicccolUtilIO.writeArrayListToFile(
+								distributedLassoInput, outPutDir
+										+ "J_LassoInput_" + filePre + "_"
+										+ siteName + "_Random" + i + ".txt");
+					}// for repeatNum
+				} // if
+		} // for each site
+
+		DicccolUtilIO.writeArrayListToFile(featureList, outPutDir
+				+ "FeatureList_" + filePre + ".txt");
+		System.out.println("#####################prepareForLassoAll finished!");
 	}
 
 	public void prepareForWeka(String siteConfig) {
@@ -283,7 +440,7 @@ public class J_ExcelReaderForLasso {
 	public List<Integer> findNextSites(double diffThreshold,
 			List<String> siteList, List<Integer> g0List, List<Integer> g1List) {
 		// double diffThreshold = 0.1;
-		if(siteList.size()==1)
+		if (siteList.size() == 1)
 			System.out.println("Only one left!!!");
 
 		List<Integer> indexList = new ArrayList<Integer>();
@@ -366,7 +523,7 @@ public class J_ExcelReaderForLasso {
 		List<List<Integer>> balancedSiteG1List = new ArrayList<List<Integer>>();
 		int count = siteList.size();
 		do {
-			double diffThreshold = 0.07;
+			double diffThreshold = 0.10;
 			List<Integer> indexList = new ArrayList<Integer>();
 			do {
 				System.out.println("------tryint diffThreshold="
@@ -408,6 +565,8 @@ public class J_ExcelReaderForLasso {
 		List<Integer> g1List = new ArrayList<Integer>();
 		List<String> siteList = new ArrayList<String>();
 
+		int NumOfTotalG0 = 0;
+		int NumOfTotalG1 = 0;
 		System.out.println("#####################PrintingDataInfo...");
 		System.out.println("#####File: " + category + "\\" + fileName);
 		System.out.println("#####There are " + subNum + " subjects in total.");
@@ -419,6 +578,7 @@ public class J_ExcelReaderForLasso {
 			System.out.println("Group-0:");
 			if (siteMap_G0.containsKey(site)) {
 				System.out.println(siteMap_G0.get(site).size());
+				NumOfTotalG0 += siteMap_G0.get(site).size();
 				g0List.add(siteMap_G0.get(site).size());
 			} else {
 				System.out.println("0");
@@ -427,44 +587,160 @@ public class J_ExcelReaderForLasso {
 			System.out.println("Group-1:");
 			if (siteMap_G1.containsKey(site)) {
 				System.out.println(siteMap_G1.get(site).size());
+				NumOfTotalG1 += siteMap_G1.get(site).size();
 				g1List.add(siteMap_G1.get(site).size());
 			} else {
 				System.out.println("0");
 				g1List.add(0);
 			}
 			siteList.add(site);
-		}
+		} //for site
+		System.out.println("#####There are " + NumOfTotalG0 + " controls in total.");
+		System.out.println("#####There are " + NumOfTotalG1 + " MDD in total.");
+		
+		
 		System.out.println("#####Sites (Group-0>" + subNumThre
 				+ " and Group-1>" + subNumThre + "):");
+		String printSitesList = "";
 		for (String site : siteSet)
 			if (siteMap_G0.containsKey(site) && siteMap_G1.containsKey(site))
 				if (siteMap_G0.get(site).size() > subNumThre
 						&& siteMap_G1.get(site).size() > subNumThre)
-					System.out.println(site);
+					printSitesList += site + " ";
+		System.out.println(printSitesList);
+		for (String site : siteSet)
+			if (siteMap_G0.containsKey(site) && siteMap_G1.containsKey(site))
+				if (siteMap_G0.get(site).size() > subNumThre
+						&& siteMap_G1.get(site).size() > subNumThre)
+					System.out.println(site + " ("
+							+ siteMap_G0.get(site).size() + "/"
+							+ siteMap_G1.get(site).size() + ")");
 		System.out.println("#####################PrintingDataInfo finished!");
 		String siteSequenceFileName = fileName.substring(0,
-				fileName.length() - 4) + "_SiteSequence_0.06.txt";
-		this.findBalancedSiteSequence(siteList, g0List, g1List,
-				siteSequenceFileName);
+				fileName.length() - 4)
+				+ "_"
+				+ category
+				+ "_SiteSequence_All.txt";
+		// this.findBalancedSiteSequence(siteList, g0List, g1List,
+		// siteSequenceFileName);
 		return siteSequenceFileName;
 	}
 
+	public void printSequenceLine(List<String> siteNameList) {
+		String siteLine = "";
+		List<Integer> g0List = new ArrayList<Integer>();
+		List<Integer> g1List = new ArrayList<Integer>();
+		double numG0 = 0.0;
+		double numG1 = 0.0;
+		List<String> outputList = new ArrayList<String>();
+
+		String siteG0G1Line = "(";
+		for (String siteName : siteNameList) {
+			siteLine = siteLine + siteName + ";";
+			int tmpNumG0 = siteMap_G0.get(siteName).size();
+			g0List.add(tmpNumG0);
+			numG0 += (double) tmpNumG0;
+
+			int tmpNumG1 = siteMap_G1.get(siteName).size();
+			g1List.add(tmpNumG1);
+			numG1 += (double) tmpNumG1;
+		} // for siteName
+		siteLine = siteLine.substring(0, siteLine.length() - 1);
+
+		for (int tmpNumG0 : g0List)
+			siteG0G1Line = siteG0G1Line + tmpNumG0 + "+";
+		siteG0G1Line = siteG0G1Line.substring(0, siteG0G1Line.length() - 1);
+		siteG0G1Line += "/";
+
+		for (int tmpNumG1 : g1List)
+			siteG0G1Line = siteG0G1Line + tmpNumG1 + "+";
+		siteG0G1Line = siteG0G1Line.substring(0, siteG0G1Line.length() - 1);
+		siteG0G1Line += ")";
+
+		double g0 = numG0 / (numG0 + numG1);
+		double g1 = numG1 / (numG0 + numG1);
+		String fullLine = siteLine + " " + siteG0G1Line + " g0:" + g0 + " g1:"
+				+ g1;
+		System.out.println(fullLine);
+	}
+
+	public String correceExcelFileName(String excelfileName) {
+		excelfileName = excelfileName.replaceAll("_Dub", "_Dublin");
+		excelfileName = excelfileName.replaceAll("_Hou", "_Houston");
+		excelfileName = excelfileName.replaceAll("_Ber", "_Berlin");
+		excelfileName = excelfileName.replaceAll("_Stan", "_Stanford");
+		excelfileName = excelfileName.replaceAll("_Syd", "_Sydney");
+		// excelfileName = excelfileName.replaceAll("_Ped", "_Pedro");
+		excelfileName = excelfileName.replaceAll("_BRC", "_BRCDECC");
+		excelfileName = excelfileName.replaceAll("_Muns", "_Munster");
+		excelfileName = excelfileName.replaceAll("_Gron", "_Groningen");
+		excelfileName = excelfileName.replaceAll("_Mel", "_Melbourne");
+		return excelfileName;
+	}
+
+	public void prepareForLasso_BrandySequence(String category,
+			String excelfileName) {
+		excelfileName = this.correceExcelFileName(excelfileName);
+		String[] siteNames = excelfileName.split("_");
+		List<String> siteNameList = new ArrayList<String>();
+		for (int i = 2; i < siteNames.length; i++)
+			siteNameList.add(siteNames[i].trim());
+		this.printSequenceLine(siteNameList);
+
+		String filePre = excelfileName.split("_")[0].trim();
+		String outPutDir = homeDataDir + "LassoInput\\" + category + "\\"
+				+ filePre + "\\";
+		String fileName = "J_LassoInput_" + filePre + "_";
+		List<String> distributedLassoInput = new ArrayList<String>();
+		for (String siteName : siteNameList) {
+			fileName += siteDic.getCodeFromSite(siteName);
+			List<double[]> dataG0 = siteMap_G0.get(siteName);
+			if (dataG0 != null)
+				for (double[] currentdata : dataG0) {
+					String currentLine = "0.0,";
+					for (int f = 0; f < feaNum; f++)
+						currentLine = currentLine + currentdata[f] + " ";
+					distributedLassoInput.add(currentLine);
+				} // for
+			List<double[]> dataG1 = siteMap_G1.get(siteName);
+			if (dataG1 != null)
+				for (double[] currentdata : dataG1) {
+					String currentLine = "1.0,";
+					for (int f = 0; f < feaNum; f++)
+						currentLine = currentLine + currentdata[f] + " ";
+					distributedLassoInput.add(currentLine);
+				} // for
+		} // for i
+		DicccolUtilIO.writeArrayListToFile(distributedLassoInput, outPutDir
+				+ fileName + ".txt");
+		DicccolUtilIO.writeArrayListToFile(featureList, outPutDir
+				+ "FeatureList_" + filePre + ".txt");
+
+	}
+
 	public static void main(String[] args) throws BiffException, IOException {
-		if (args.length == 2) {
-			String category = args[0].trim();
-			String excelfileName = args[1].trim();
+		// if (args.length == 2) {
+		// String category = args[0].trim();
+		// String excelfileName = args[1].trim();
 
-			J_ExcelReaderForLasso mainHandler = new J_ExcelReaderForLasso();
-			mainHandler.readExcel(category, excelfileName);
-			String siteSequenceFileName = mainHandler.printDataInfo(category,
-					excelfileName);
-			mainHandler.prepareForLasso(siteSequenceFileName, category,
-					excelfileName);
-			// mainHandler.prepareForWeka("J_PrepareLassoInput_Site_Imputed_Over21_20.txt");
+		String category = "Complete";
+		String excelfileName = "Females_Over21_Dub_Hou_MPIP_Ber_Muns_BRC_NESDA_Pedro_Syd_CLING";
 
-		} else
-			System.out
-					.println("Need Complete/Imputed MaleFemale/Over21/Recurrent/Under21");
+		J_ExcelReaderForLasso mainHandler = new J_ExcelReaderForLasso();
+		mainHandler.readExcel(category, excelfileName);
+		String siteSequenceFileName = mainHandler.printDataInfo(category,
+				excelfileName);
+		// mainHandler.prepareForLasso(siteSequenceFileName, category,
+		// excelfileName);
+		// mainHandler.prepareForLassoAll(category, excelfileName);
+		// mainHandler.prepareForLasso_BrandySequence(category, excelfileName);
+//		 mainHandler.prepareForLassoSeparateSite(category, excelfileName);
+
+		// mainHandler.prepareForWeka("J_PrepareLassoInput_Site_Imputed_Over21_20.txt");
+
+		// } else
+		// System.out
+		// .println("Need Complete/Imputed MaleFemale/Over21/Recurrent/Under21");
 
 	}
 
