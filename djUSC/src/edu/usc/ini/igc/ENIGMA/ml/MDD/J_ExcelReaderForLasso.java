@@ -216,7 +216,7 @@ public class J_ExcelReaderForLasso {
 			equalNum = dataG1All.size();
 		}
 
-		int repeatNum = 100;
+		int repeatNum = 1;
 		for (int i = 0; i < repeatNum; i++) {
 			List<String> distributedLassoInput = new ArrayList<String>();
 			for (double[] currentdata : dataLess) {
@@ -723,16 +723,16 @@ public class J_ExcelReaderForLasso {
 		// String category = args[0].trim();
 		// String excelfileName = args[1].trim();
 
-		String category = "Complete";
-		String excelfileName = "Females_Over21_Dub_Hou_MPIP_Ber_Muns_BRC_NESDA_Pedro_Syd_CLING";
+		String category = "Imputed";
+		String excelfileName = "NoAntiDep_Site_Age_Sex_ICV_MPIP_Imp";
 
 		J_ExcelReaderForLasso mainHandler = new J_ExcelReaderForLasso();
 		mainHandler.readExcel(category, excelfileName);
 		String siteSequenceFileName = mainHandler.printDataInfo(category,
 				excelfileName);
-		// mainHandler.prepareForLasso(siteSequenceFileName, category,
-		// excelfileName);
-		// mainHandler.prepareForLassoAll(category, excelfileName);
+//		 mainHandler.prepareForLasso(siteSequenceFileName, category,
+//		 excelfileName);
+		 mainHandler.prepareForLassoAll(category, excelfileName);
 		// mainHandler.prepareForLasso_BrandySequence(category, excelfileName);
 //		 mainHandler.prepareForLassoSeparateSite(category, excelfileName);
 

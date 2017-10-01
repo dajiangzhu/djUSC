@@ -474,10 +474,11 @@ public class J_Test {
 		double SPEThreshold = SENThreshold;
 
 		int featureNum = 25;
-		String category = "Complete";
-		String subgroup = "Males";
+		String category = "Imputed";
+		String subgroup = "Epi3";
+		int randomNum = 1;
 		List<String> subFolderList = new ArrayList<String>();
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < randomNum; i++)
 			subFolderList.add("J_SVMOutput_Random" + i);
 
 		double globalBestACC = 0.0;
@@ -525,9 +526,9 @@ public class J_Test {
 			globalBestSEN += currentBestSEN;
 		} // for each sub folder
 
-		globalBestACC /= 100.0;
-		globalBestSPE /= 100.0;
-		globalBestSEN /= 100.0;
+		globalBestACC /= (float)randomNum;
+		globalBestSPE /= (float)randomNum;
+		globalBestSEN /= (float)randomNum;
 
 		System.out.println(category + " -> " + subgroup + " -> " + "ACC:"
 				+ globalBestACC + "   SPE:" + globalBestSPE + "   SEN:"
@@ -711,9 +712,9 @@ public class J_Test {
 	public static void main(String[] args) throws BiffException, IOException,
 			RowsExceededException, WriteException {
 		J_Test mainHandler = new J_Test();
-		// mainHandler.dispalyClassificationPerformance_qsub_random();
+		 mainHandler.dispalyClassificationPerformance_qsub_random();
 		// mainHandler.dispalyClassificationPerformance_qsub_singlesite();
-		mainHandler.dispalyClassificationPerformance_qsub_seperatesites();
+//		mainHandler.dispalyClassificationPerformance_qsub_seperatesites();
 		// mainHandler.dispalyClassificationPerformance_singlesite();
 		// mainHandler.displaySiteEffets();
 		// mainHandler.combineSingleSiteToOneFile();
